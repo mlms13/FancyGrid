@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+.my-fancy-grid-container {
+  height: calc(100vh - 300px);
+  width: 100%;
+}
+
+.fg-row {
+  display: flex;
+}
+
+.fg-cell {
+  border: 8px inset red;
+  flex: 1 1 auto;
+  padding: 10px;
+  white-space: nowrap;
+}
+
+.fg-vscroller {
+  background: #ccc;
+  height: 40px;
+  width: 12px;
+}
+    </style>
+  </head>
+  <body>
+    <div class="my-fancy-grid-container"></div>
+    <script src="bundle.js"></script>
+  </body>
+</html>

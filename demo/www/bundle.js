@@ -62,7 +62,6 @@ Main.main = function() {
 	}, hSize : function() {
 		return 100 * cellWidth;
 	}});
-	grid["goto"](10,10);
 };
 Math.__name__ = true;
 var Std = function() { };
@@ -143,9 +142,16 @@ dots_Attributes.setStringAttribute = function(el,name,value) {
 };
 var dots_Dom = function() { };
 dots_Dom.__name__ = true;
-dots_Dom.on = function(el,eventName,handler) {
-	el.addEventListener(eventName,handler);
+dots_Dom.addClass = function(el,className) {
+	el.classList.add(className);
 	return el;
+};
+dots_Dom.removeClass = function(el,className) {
+	el.classList.remove(className);
+	return el;
+};
+dots_Dom.nodeListToArray = function(list) {
+	return Array.prototype.slice.call(list,0);
 };
 dots_Dom.create = function(name,attrs,children,textContent,doc) {
 	var node = dots_SelectorParser.parseSelector(name,attrs);
@@ -178,14 +184,13 @@ dots_Dom.append = function(el,child,children) {
 	if(child != null) dots_Dom.appendChild(el,child);
 	return dots_Dom.appendChildren(el,children != null?children:[]);
 };
-dots_Dom.empty = function(el) {
-	while(el.firstChild != null) el.removeChild(el.firstChild);
-	return el;
-};
 var dots_Query = function() { };
 dots_Query.__name__ = true;
 dots_Query.find = function(selector,ctx) {
 	return (ctx != null?ctx:dots_Query.doc).querySelector(selector);
+};
+dots_Query.selectNodes = function(selector,ctx) {
+	return (ctx != null?ctx:dots_Query.doc).querySelectorAll(selector);
 };
 var dots_SelectorParser = function(selector) {
 	this.selector = selector;
@@ -314,100 +319,184 @@ dots_SelectorParser.prototype = {
 	}
 	,__class__: dots_SelectorParser
 };
-var fancy_RefSize = function(vSize,hSize,vExtraSize,hExtraSize) {
-	this.vSize = vSize;
-	this.hSize = hSize;
-	if(null != vExtraSize) this.vExtraSize = vExtraSize; else this.vExtraSize = 0.5;
-	if(null != hExtraSize) this.hExtraSize = hExtraSize; else this.hExtraSize = 0.5;
+var fancy_ScrollPosition = function() {
+	this.x = 0;
+	this.y = 0;
 };
-fancy_RefSize.__name__ = true;
-fancy_RefSize.prototype = {
-	__class__: fancy_RefSize
+fancy_ScrollPosition.__name__ = true;
+fancy_ScrollPosition.prototype = {
+	__class__: fancy_ScrollPosition
+};
+var fancy_Grid9 = function(parent) {
+	var _g = this;
+	this.position = new fancy_ScrollPosition();
+	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
+	dots_Dom.append(parent,this.el);
+	this.top = dots_Query.find(".row.top",this.el);
+	this.bottom = dots_Query.find(".row.bottom",this.el);
+	this.left = dots_Query.find(".column.left",this.el);
+	this.right = dots_Query.find(".column.right",this.el);
+	this.tops = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.top",this.el));
+	this.bottoms = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.bottom",this.el));
+	this.lefts = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.left",this.el));
+	this.rights = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.right",this.el));
+	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
+	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
+	this.setGridSizeFromContainer();
+	this.resizeContent(1200,1000);
+	this.sizeFixedElements(400,100,600,200);
+	this.refresh();
+	window.addEventListener("resize",function(_) {
+		_g.setGridSizeFromContainer();
+		_g.refresh();
+	});
+};
+fancy_Grid9.__name__ = true;
+fancy_Grid9.prototype = {
+	setGridSizeFromContainer: function() {
+		var w = this.el.parentElement.offsetWidth;
+		var h = this.el.parentElement.offsetHeight;
+		this.resizeGrid(w,h);
+	}
+	,refresh: function() {
+		var _g = this;
+		if(!this.dirty) return;
+		this.dirty = false;
+		((function(_e) {
+			return function(effect) {
+				thx_Arrays.each(_e,effect);
+				return;
+			};
+		})(this.middles))(function(_) {
+			return _.style.top = "" + (-_g.position.y + _g.topHeight) + "px";
+		});
+		((function(_e1) {
+			return function(effect1) {
+				thx_Arrays.each(_e1,effect1);
+				return;
+			};
+		})(this.bottoms))(function(_1) {
+			return _1.style.top = "" + (Math.min(_g.gridHeight,_g.contentHeight) - _g.bottomHeight) + "px";
+		});
+		this.bottom.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight) + "px";
+		((function(_e2) {
+			return function(effect2) {
+				thx_Arrays.each(_e2,effect2);
+				return;
+			};
+		})(this.centers))(function(_2) {
+			return _2.style.left = "" + (-_g.position.x + _g.leftWidth) + "px";
+		});
+		((function(_e3) {
+			return function(effect3) {
+				thx_Arrays.each(_e3,effect3);
+				return;
+			};
+		})(this.rights))(function(_3) {
+			return _3.style.left = "" + (Math.min(_g.gridWidth,_g.contentWidth) - _g.rightWidth) + "px";
+		});
+		this.right.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth) + "px";
+		if(this.position.y > 0 || this.gridHeight < this.topHeight + this.bottomHeight) dots_Dom.addClass(this.top,"overlay-bottom"); else dots_Dom.removeClass(this.top,"overlay-bottom");
+		if(this.contentHeight > this.gridHeight) dots_Dom.addClass(this.bottom,"overlay-top"); else dots_Dom.removeClass(this.bottom,"overlay-top");
+		if(this.position.x > 0 || this.gridWidth < this.leftWidth + this.rightWidth) dots_Dom.addClass(this.left,"overlay-right"); else dots_Dom.removeClass(this.left,"overlay-right");
+		if(this.contentWidth > this.gridWidth && this.gridWidth > this.leftWidth + this.rightWidth) dots_Dom.addClass(this.right,"overlay-left"); else dots_Dom.removeClass(this.right,"overlay-left");
+	}
+	,resizeGrid: function(width,height) {
+		if(this.gridWidth == width && this.gridHeight == height) return;
+		this.dirty = true;
+		this.gridWidth = width;
+		this.gridHeight = height;
+		this.top.style.width = this.bottom.style.width = "" + Math.min(this.gridWidth,this.contentWidth) + "px";
+		this.left.style.height = this.right.style.height = "" + Math.min(this.gridHeight,this.contentHeight) + "px";
+	}
+	,resizeContent: function(width,height) {
+		if(this.contentWidth == width && this.contentHeight == height) return;
+		this.dirty = true;
+		this.contentWidth = width;
+		this.contentHeight = height;
+		this.top.style.width = this.bottom.style.width = "" + Math.min(this.gridWidth,this.contentWidth) + "px";
+		this.left.style.height = this.right.style.height = "" + Math.min(this.gridHeight,this.contentHeight) + "px";
+	}
+	,sizeFixedElements: function(topHeight,bottomHeight,leftWidth,rightWidth) {
+		var _g = this;
+		if(this.topHeight == topHeight && this.bottomHeight == bottomHeight && this.leftWidth == leftWidth && this.rightWidth == rightWidth) return;
+		this.dirty = true;
+		this.topHeight = topHeight;
+		this.bottomHeight = bottomHeight;
+		this.leftWidth = leftWidth;
+		this.rightWidth = rightWidth;
+		this.top.style.height = "" + topHeight + "px";
+		((function(_e) {
+			return function(effect) {
+				thx_Arrays.each(_e,effect);
+				return;
+			};
+		})(this.tops))(function(_) {
+			return _.style.height = "" + topHeight + "px";
+		});
+		((function(_e1) {
+			return function(effect1) {
+				thx_Arrays.each(_e1,effect1);
+				return;
+			};
+		})(this.middles))(function(_1) {
+			return _1.style.height = "" + (_g.contentHeight - topHeight - bottomHeight) + "px";
+		});
+		this.bottom.style.height = "" + bottomHeight + "px";
+		((function(_e2) {
+			return function(effect2) {
+				thx_Arrays.each(_e2,effect2);
+				return;
+			};
+		})(this.bottoms))(function(_2) {
+			return _2.style.height = "" + bottomHeight + "px";
+		});
+		this.left.style.width = "" + leftWidth + "px";
+		((function(_e3) {
+			return function(effect3) {
+				thx_Arrays.each(_e3,effect3);
+				return;
+			};
+		})(this.lefts))(function(_3) {
+			return _3.style.width = "" + leftWidth + "px";
+		});
+		((function(_e4) {
+			return function(effect4) {
+				thx_Arrays.each(_e4,effect4);
+				return;
+			};
+		})(this.centers))(function(_4) {
+			return _4.style.width = "" + (_g.contentWidth - leftWidth - rightWidth) + "px";
+		});
+		this.right.style.width = "" + rightWidth + "px";
+		((function(_e5) {
+			return function(effect5) {
+				thx_Arrays.each(_e5,effect5);
+				return;
+			};
+		})(this.rights))(function(_5) {
+			return _5.style.width = "" + rightWidth + "px";
+		});
+	}
+	,__class__: fancy_Grid9
+};
+var fancy_View = function(parent) {
+	this.el = dots_Dom.create("div.view",null,[]);
+	dots_Dom.append(parent,this.el);
+};
+fancy_View.__name__ = true;
+fancy_View.prototype = {
+	__class__: fancy_View
 };
 var fancy_Grid = function(parent,options) {
-	this.options = options;
-	this.refSize = new fancy_RefSize(options.vSize,options.hSize,options.vExtraSize,options.hExtraSize);
-	this.floater = dots_Dom.create("div.fg-floater",(function($this) {
-		var $r;
-		var _g = new haxe_ds_StringMap();
-		if(__map_reserved.style != null) _g.setReserved("style","position:absolute;"); else _g.h["style"] = "position:absolute;";
-		$r = _g;
-		return $r;
-	}(this)));
-	this.vScroller = dots_Dom.create("div.fg-vscroller",(function($this) {
-		var $r;
-		var _g1 = new haxe_ds_StringMap();
-		if(__map_reserved.style != null) _g1.setReserved("style","position:absolute;right:0"); else _g1.h["style"] = "position:absolute;right:0";
-		$r = _g1;
-		return $r;
-	}(this)));
-	this.gridContainer = dots_Dom.create("div.fg-container",(function($this) {
-		var $r;
-		var _g2 = new haxe_ds_StringMap();
-		if(__map_reserved.style != null) _g2.setReserved("style","position:relative;width:100%;height:100%;overflow:hidden"); else _g2.h["style"] = "position:relative;width:100%;height:100%;overflow:hidden";
-		$r = _g2;
-		return $r;
-	}(this)),[this.floater,this.vScroller]);
-	dots_Dom.append(dots_Dom.empty(parent),this.gridContainer);
-	dots_Dom.on(this.gridContainer,"wheel",$bind(this,this.onWheel));
+	var fancyGrid = dots_Dom.create("div.fancy-grid");
+	dots_Dom.append(parent,fancyGrid);
+	var view = new fancy_View(fancyGrid);
+	var grid9 = new fancy_Grid9(view.el);
 };
 fancy_Grid.__name__ = true;
 fancy_Grid.prototype = {
-	onWheel: function(e) {
-		this.moveFloater(-e.deltaX,-e.deltaY);
-	}
-	,getContainerSize: function() {
-		return { width : this.gridContainer.offsetWidth, height : this.gridContainer.offsetHeight};
-	}
-	,moveFloater: function(x,y) {
-		this.moveFloaterTo(this.floater.offsetLeft + x,this.floater.offsetTop + y);
-	}
-	,moveFloaterTo: function(x,y) {
-		var size = this.getContainerSize();
-		var h = this.floater.offsetHeight;
-		var w = this.floater.offsetWidth;
-		if(y + h < size.height) {
-			if(h < size.height) y = 0; else y = size.height - h;
-		} else if(y > 0) y = 0;
-		if(x + w < size.width) {
-			if(w < size.width) x = 0; else x = size.width - w;
-		} else if(x > 0) x = 0;
-		if(y + h < size.height) {
-			if(h < size.height) y = 0; else y = size.height - h;
-		}
-		this.floater.style.top = "" + y + "px";
-		this.floater.style.left = "" + x + "px";
-		haxe_Log.trace("floater pos (" + x + ", " + y + ")",{ fileName : "Grid.hx", lineNumber : 114, className : "fancy.Grid", methodName : "moveFloaterTo"});
-	}
-	,'goto': function(row,col) {
-		dots_Dom.empty(this.floater);
-		var size = this.getContainerSize();
-		if(row < 0) row = 0; else if(row >= this.options.rows) row = this.options.rows - 1;
-		if(col < 0) col = 0; else if(col >= this.options.columns) col = this.options.columns - 1;
-		var maxcol = this.options.columns;
-		var _g1 = row;
-		var _g = this.options.rows;
-		while(_g1 < _g) {
-			var r = _g1++;
-			var tr = dots_Dom.create("div.fg-row");
-			dots_Dom.append(this.floater,tr);
-			var _g2 = col;
-			while(_g2 < maxcol) {
-				var c = _g2++;
-				var content = this.options.render(r,c);
-				var td = dots_Dom.create("div.fg-cell",null,[content]);
-				dots_Dom.append(tr,td);
-				haxe_Log.trace(r,{ fileName : "Grid.hx", lineNumber : 136, className : "fancy.Grid", methodName : "goto", customParams : [c,tr.offsetWidth,size.width]});
-				if(maxcol == this.options.columns && tr.offsetWidth > size.width) {
-					maxcol = c + 1;
-					break;
-				}
-			}
-			if(this.floater.offsetHeight > size.height) break;
-		}
-		this.moveFloaterTo(0,0);
-	}
-	,__class__: fancy_Grid
+	__class__: fancy_Grid
 };
 var haxe_StackItem = { __ename__ : true, __constructs__ : ["CFunction","Module","FilePos","Method","LocalFunction"] };
 haxe_StackItem.CFunction = ["CFunction",0];
@@ -540,11 +629,6 @@ haxe__$Int64__$_$_$Int64.__name__ = true;
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
 };
-var haxe_Log = function() { };
-haxe_Log.__name__ = true;
-haxe_Log.trace = function(v,infos) {
-	js_Boot.__trace(v,infos);
-};
 var haxe_ds_StringMap = function() {
 	this.h = { };
 };
@@ -655,25 +739,6 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = true;
-js_Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-};
-js_Boot.__trace = function(v,i) {
-	var msg;
-	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
-	msg += js_Boot.__string_rec(v,"");
-	if(i != null && i.customParams != null) {
-		var _g = 0;
-		var _g1 = i.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			msg += "," + js_Boot.__string_rec(v1,"");
-		}
-	}
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
-};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;
@@ -991,6 +1056,14 @@ js_html_compat_Uint8Array._subarray = function(start,end) {
 };
 var thx_Arrays = function() { };
 thx_Arrays.__name__ = true;
+thx_Arrays.each = function(arr,effect) {
+	var _g1 = 0;
+	var _g = arr.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		effect(arr[i]);
+	}
+};
 thx_Arrays.contains = function(array,element,eq) {
 	if(null == eq) return thx__$ReadonlyArray_ReadonlyArray_$Impl_$.indexOf(array,element) >= 0; else {
 		var _g1 = 0;
@@ -1096,8 +1169,6 @@ thx__$ReadonlyArray_ReadonlyArray_$Impl_$.indexOf = function(this1,el,eq) {
 	}
 	return -1;
 };
-var $_, $fid = 0;
-function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 String.prototype.__class__ = String;
 String.__name__ = true;
 Array.__name__ = true;

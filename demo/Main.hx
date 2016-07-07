@@ -14,6 +14,6 @@ class Main {
       hSize: function () return 100 * cellWidth
     } : GridOptions));
 
-    grid.goto(10, 10);
+    // grid.goto(10, 10);
   }
 }

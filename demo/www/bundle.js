@@ -150,6 +150,10 @@ dots_Dom.removeClass = function(el,className) {
 	el.classList.remove(className);
 	return el;
 };
+dots_Dom.on = function(el,eventName,handler) {
+	el.addEventListener(eventName,handler);
+	return el;
+};
 dots_Dom.nodeListToArray = function(list) {
 	return Array.prototype.slice.call(list,0);
 };
@@ -327,6 +331,53 @@ fancy_ScrollPosition.__name__ = true;
 fancy_ScrollPosition.prototype = {
 	__class__: fancy_ScrollPosition
 };
+var fancy_SwipeHelper = function(el,callback) {
+	var _g = this;
+	this.el = el;
+	el.addEventListener("touchmove",function(e) {
+		e.preventDefault();
+		_g.apply(e,function(t) {
+			var dx = t.clientX - _g.x;
+			var dy = t.clientY - _g.y;
+			_g.x = t.clientX;
+			_g.y = t.clientY;
+			callback(dx,dy);
+		});
+	});
+	el;
+	el.addEventListener("touchstart",function(e1) {
+		e1.preventDefault();
+		if(null != _g.id) return;
+		var t1 = e1.touches[0];
+		_g.id = t1.identifier;
+		_g.x = t1.clientX;
+		_g.y = t1.clientY;
+	});
+	el;
+	el.addEventListener("touchend",function(e2) {
+		e2.preventDefault();
+		if(e2.touches.length == 0) _g.id = null; else _g.apply(e2,function(_) {
+			_g.id = null;
+		});
+	});
+	el;
+};
+fancy_SwipeHelper.__name__ = true;
+fancy_SwipeHelper.prototype = {
+	apply: function(e,f) {
+		var _g = 0;
+		var _g1 = e.touches;
+		while(_g < _g1.length) {
+			var t = _g1[_g];
+			++_g;
+			if(t.identifier == this.id) {
+				f(t);
+				break;
+			}
+		}
+	}
+	,__class__: fancy_SwipeHelper
+};
 var fancy_Grid9 = function(parent) {
 	var _g = this;
 	this.position = new fancy_ScrollPosition();
@@ -343,17 +394,44 @@ var fancy_Grid9 = function(parent) {
 	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
 	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
 	this.setGridSizeFromContainer();
-	this.resizeContent(1200,1000);
-	this.sizeFixedElements(400,100,600,200);
+	this.resizeContent(1000,1000);
+	this.sizeFixedElements(60,30,100,90);
 	this.refresh();
 	window.addEventListener("resize",function(_) {
 		_g.setGridSizeFromContainer();
+		_g.resetPosition();
+		_g.refresh();
+	});
+	dots_Dom.on(this.el,"wheel",function(e) {
+		_g.movePosition(e.deltaX,e.deltaY);
+		_g.refresh();
+	});
+	new fancy_SwipeHelper(this.el,function(dx,dy) {
+		_g.movePosition(-dx,-dy);
 		_g.refresh();
 	});
 };
 fancy_Grid9.__name__ = true;
 fancy_Grid9.prototype = {
-	setGridSizeFromContainer: function() {
+	resetPosition: function() {
+		this.setPosition(this.position.x,this.position.y);
+	}
+	,movePosition: function(x,y) {
+		this.setPosition(this.position.x + x,this.position.y + y);
+	}
+	,setPosition: function(x,y) {
+		var oldx = this.position.x;
+		var oldy = this.position.y;
+		this.position.x = x;
+		this.position.y = y;
+		var limit = Math.max(this.contentWidth - this.gridWidth,0);
+		if(this.position.x < 0) this.position.x = 0; else if(this.position.x > limit) this.position.x = limit;
+		var limit1 = Math.max(this.contentHeight - this.gridHeight,0);
+		if(this.position.y < 0) this.position.y = 0; else if(this.position.y > limit1) this.position.y = limit1;
+		if(oldx == this.position.x && oldy == this.position.y) return;
+		this.dirty = true;
+	}
+	,setGridSizeFromContainer: function() {
 		var w = this.el.parentElement.offsetWidth;
 		var h = this.el.parentElement.offsetHeight;
 		this.resizeGrid(w,h);
@@ -397,9 +475,9 @@ fancy_Grid9.prototype = {
 		});
 		this.right.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth) + "px";
 		if(this.position.y > 0 || this.gridHeight < this.topHeight + this.bottomHeight) dots_Dom.addClass(this.top,"overlay-bottom"); else dots_Dom.removeClass(this.top,"overlay-bottom");
-		if(this.contentHeight > this.gridHeight) dots_Dom.addClass(this.bottom,"overlay-top"); else dots_Dom.removeClass(this.bottom,"overlay-top");
+		if(this.contentHeight > this.gridHeight && this.position.y < this.contentHeight - this.gridHeight) dots_Dom.addClass(this.bottom,"overlay-top"); else dots_Dom.removeClass(this.bottom,"overlay-top");
 		if(this.position.x > 0 || this.gridWidth < this.leftWidth + this.rightWidth) dots_Dom.addClass(this.left,"overlay-right"); else dots_Dom.removeClass(this.left,"overlay-right");
-		if(this.contentWidth > this.gridWidth && this.gridWidth > this.leftWidth + this.rightWidth) dots_Dom.addClass(this.right,"overlay-left"); else dots_Dom.removeClass(this.right,"overlay-left");
+		if(this.contentWidth > this.gridWidth && this.position.x < this.contentWidth - this.gridWidth) dots_Dom.addClass(this.right,"overlay-left"); else dots_Dom.removeClass(this.right,"overlay-left");
 	}
 	,resizeGrid: function(width,height) {
 		if(this.gridWidth == width && this.gridHeight == height) return;

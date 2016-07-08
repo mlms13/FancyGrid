@@ -16,6 +16,8 @@ using thx.Functions;
 // - fixed footer rows
 // - fixed left columns
 // - fixed right columns
+// - no fixed columns
+// - no fixed rows
 
 
 typedef GridOptions = {
@@ -78,8 +80,53 @@ class CellPosition {
   }
 }
 
-// TODO
-// - dynamically add class to state overlapping
+class SwipeHelper {
+  var el: Element;
+  var id: Null<Int>;
+  var x: Float;
+  var y: Float;
+  public function new(el: Element, callback : Float -> Float -> Void) {
+    this.el = el;
+    el.on("touchmove", function(e: js.html.TouchEvent) {
+      e.preventDefault();
+      apply(e, function(t) {
+        var dx = t.clientX - x,
+            dy = t.clientY - y;
+        x = t.clientX;
+        y = t.clientY;
+        callback(dx, dy);
+      });
+    });
+    el.on("touchstart", function(e: js.html.TouchEvent) {
+      e.preventDefault();
+      if(null != id) return;
+      var t = e.touches[0];
+      id = t.identifier;
+      x = t.clientX;
+      y = t.clientY;
+    });
+    el.on("touchend", function(e: js.html.TouchEvent) {
+      e.preventDefault();
+      if(e.touches.length == 0) {
+        this.id = null;
+      } else {
+        apply(e, function(_) {
+          this.id = null;
+        });
+      }
+    });
+  }
+
+  function apply(e: js.html.TouchEvent, f : js.html.Touch -> Void) {
+    for(t in e.touches) {
+      if(t.identifier == id) {
+        f(t);
+        break;
+      }
+    }
+  }
+}
+
 class Grid9 {
   public var el(default, null): Element;
   public var contentWidth(default, null): Float;
@@ -138,17 +185,58 @@ class Grid9 {
     centers = Query.select(".cell.center", el);
 
     // RESIZE
+    // TODO no hard coded
     setGridSizeFromContainer();
-    resizeContent(1200, 1000); // TODO
-    sizeFixedElements(400, 100, 600, 200); // TODO
+    resizeContent(1000, 1000); // TODO
+    sizeFixedElements(60, 30, 100, 90); // TODO
     refresh();
 
     // EVENTS
     // TODO make wiring optional
     js.Browser.window.addEventListener("resize", function(_) {
       setGridSizeFromContainer();
+      resetPosition();
       refresh();
     });
+    el.on("wheel", function(e: js.html.WheelEvent) {
+      movePosition(e.deltaX, e.deltaY);
+      refresh();
+    });
+    new SwipeHelper(el, function(dx, dy) {
+      movePosition(-dx, -dy);
+      refresh();
+    });
+  }
+
+  function resetPosition() {
+    setPosition(position.x, position.y);
+  }
+
+  public function movePosition(x: Float, y: Float) {
+    setPosition(position.x + x, position.y + y);
+  }
+
+  public function setPosition(x: Float, y: Float) {
+    var oldx = position.x,
+        oldy = position.y;
+    position.x = x;
+    position.y = y;
+
+    var limit = (contentWidth - gridWidth).max(0);
+    if(position.x < 0) {
+      position.x = 0;
+    } else if(position.x > limit) {
+      position.x = limit;
+    }
+    var limit = (contentHeight - gridHeight).max(0);
+    if(position.y < 0) {
+      position.y = 0;
+    } else if(position.y > limit) {
+      position.y = limit;
+    }
+
+    if(oldx == position.x && oldy == position.y) return;
+    dirty = true;
   }
 
   function setGridSizeFromContainer() {
@@ -172,7 +260,7 @@ class Grid9 {
       Dom.addClass(top, 'overlay-bottom');
     else
       Dom.removeClass(top, 'overlay-bottom');
-    if(contentHeight > gridHeight)
+    if(contentHeight > gridHeight && position.y < contentHeight - gridHeight)
       Dom.addClass(bottom, 'overlay-top');
     else
       Dom.removeClass(bottom, 'overlay-top');
@@ -180,7 +268,7 @@ class Grid9 {
       Dom.addClass(left, 'overlay-right');
     else
       Dom.removeClass(left, 'overlay-right');
-    if(contentWidth > gridWidth && gridWidth > leftWidth + rightWidth)
+    if(contentWidth > gridWidth && position.x < contentWidth - gridWidth) // && gridWidth > leftWidth + rightWidth)
       Dom.addClass(right, 'overlay-left');
     else
       Dom.removeClass(right, 'overlay-left');

@@ -81,6 +81,40 @@ class CellPosition {
   }
 }
 
+class MoveHelper {
+  var el: Element;
+  var moving: Bool;
+  var x: Float;
+  var y: Float;
+  public function new(el: Element, callback : Float -> Float -> Void) {
+    this.el = el;
+    el.on("mousedown", function(e: js.html.MouseEvent) {
+      if(moving) return;
+      e.preventDefault();
+      moving = true;
+      x = e.clientX;
+      y = e.clientY;
+    });
+    js.Browser.document.addEventListener("mousemove", function(e: js.html.MouseEvent) {
+      if(!moving) return;
+      e.preventDefault();
+      el.toggleClass("dragging", true); // TODO move class name to option
+
+      var dx = e.clientX - x,
+          dy = e.clientY - y;
+      x = e.clientX;
+      y = e.clientY;
+      callback(dx, dy);
+    });
+    js.Browser.document.addEventListener("mouseup", function(e: js.html.MouseEvent) {
+      if(!moving) return;
+      e.preventDefault();
+      el.toggleClass("dragging", false); // TODO move class name to option
+      this.moving = false;
+    });
+  }
+}
+
 class SwipeHelper {
   var el: Element;
   var id: Null<Int>;
@@ -95,7 +129,7 @@ class SwipeHelper {
             dy = t.clientY - y;
         x = t.clientX;
         y = t.clientY;
-        callback(dx, dy);
+        callback(-dx, -dy);
       });
     });
     el.on("touchstart", function(e: js.html.TouchEvent) {
@@ -173,7 +207,7 @@ class Grid9 {
     scrollerSize = options.scrollerSize.or(10);
     scrollerMargin = options.scrollerMargin.or(4);
     scrollerMinLength = options.scrollerMinLength.or(10);
-    scrollerMaxLength = options.scrollerMaxLength.or(200);
+    scrollerMaxLength = options.scrollerMaxLength.or(100);
     el = Dom.create("div.grid9", [
       Dom.create('div.scroller.scroller-v'),
       Dom.create('div.scroller.scroller-h'),
@@ -210,7 +244,7 @@ class Grid9 {
     // RESIZE
     // TODO no hard coded
     setGridSizeFromContainer();
-    resizeContent(1000, 1000); // TODO
+    resizeContent(1000, 2000); // TODO
     sizeFixedElements(60, 30, 100, 90); // TODO
     refresh();
 
@@ -226,10 +260,56 @@ class Grid9 {
       refresh();
     });
     new SwipeHelper(el, function(dx, dy) {
-      movePosition(-dx, -dy);
+      movePosition(dx, dy);
+      refresh();
+    });
+    new MoveHelper(scrollerH, function(dx, _) {
+      var offset = ((gridHeight / contentHeight) < 1 && (gridWidth / contentWidth) < 1) ? scrollerSize + scrollerMargin : 0,
+          span = gridWidth - leftWidth - rightWidth - offset;
+      movePosition(dx * contentWidth / span, 0);
+      refresh();
+    });
+    new MoveHelper(scrollerV, function(_, dy) {
+      var vratio = (gridHeight / contentHeight).min(1),
+          offset = (vratio < 1 && (gridWidth / contentWidth) < 1) ? scrollerSize + scrollerMargin : 0,
+          span = gridHeight - topHeight - bottomHeight - offset;
+          // idealLen = vratio * span,
+          // len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
+
+      // if(idealLen - len <= 0) {
+      trace(dy, dy * contentHeight / span);
+        movePosition(0, dy * contentHeight / span);
+      // } else {
+      //   movePosition(0, dy * (contentHeight) / span);
+        // movePosition(0, dy);
+// movePosition(0, dy * contentHeight / span);
+
+        // movePosition(0, dy * contentHeight / (span + (- idealLenidealLen + len) / 2));
+      // }
       refresh();
     });
   }
+
+/*
+var vratio = (gridHeight / contentHeight).min(1),
+    hratio = (gridWidth / contentWidth).min(1),
+    offset = (vratio < 1 && hratio < 1) ? scrollerSize + scrollerMargin : 0,
+    vspan = gridHeight - topHeight - bottomHeight - offset,
+    hspan = gridWidth - leftWidth - rightWidth - offset;
+if(vratio == 1) {
+  scrollerV.style.display = "none";
+} else {
+  scrollerV.style.display = "block";
+  var idealLen = vratio * vspan;
+  var len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
+  var absPos = (position.y / (contentHeight - gridHeight));
+  var pos = absPos * (vspan - len);
+  scrollerV.style.top = '${topHeight + pos}px';
+  scrollerV.style.left = '${gridWidth.min(contentWidth) - rightWidth - scrollerSize - scrollerMargin}px';
+  scrollerV.style.width = '${scrollerSize}px';
+  scrollerV.style.height = '${len}px';
+}
+*/
 
   function resetPosition() {
     setPosition(position.x, position.y);
@@ -330,20 +410,19 @@ class Grid9 {
   }
 
   function refreshScrollers() {
-    var vspan = gridHeight - topHeight - bottomHeight,
-        vratio = (gridHeight / contentHeight).min(1),
-        hspan = gridWidth - leftWidth - rightWidth,
-        hratio = (gridWidth / contentHeight).min(1),
-        offset = (vratio < 1 && hratio < 1) ? scrollerSize + scrollerMargin : 0;
+    var vratio = (gridHeight / contentHeight).min(1),
+        hratio = (gridWidth / contentWidth).min(1),
+        offset = (vratio < 1 && hratio < 1) ? scrollerSize + scrollerMargin : 0,
+        vspan = gridHeight - topHeight - bottomHeight - offset,
+        hspan = gridWidth - leftWidth - rightWidth - offset;
     if(vratio == 1) {
       scrollerV.style.display = "none";
     } else {
       scrollerV.style.display = "block";
-      var idealLen = vratio * (vspan - offset);
+      var idealLen = vratio * vspan;
       var len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
-      var lenRatio = len / idealLen;
       var absPos = (position.y / (contentHeight - gridHeight));
-      var pos = absPos * (vspan - len - offset);
+      var pos = absPos * (vspan - len);
       scrollerV.style.top = '${topHeight + pos}px';
       scrollerV.style.left = '${gridWidth.min(contentWidth) - rightWidth - scrollerSize - scrollerMargin}px';
       scrollerV.style.width = '${scrollerSize}px';
@@ -353,11 +432,10 @@ class Grid9 {
       scrollerH.style.display = "none";
     } else {
       scrollerH.style.display = "block";
-      var idealLen = hratio * (hspan - offset);
+      var idealLen = hratio * hspan;
       var len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
-      var lenRatio = len / idealLen;
       var absPos = (position.x / (contentWidth - gridWidth));
-      var pos = absPos * (hspan - len - offset);
+      var pos = absPos * (hspan - len);
       scrollerH.style.left = '${leftWidth + pos}px';
       scrollerH.style.top = '${gridHeight.min(contentHeight) - bottomHeight - scrollerSize - scrollerMargin}px';
       scrollerH.style.width = '${len}px';

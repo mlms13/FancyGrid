@@ -333,6 +333,38 @@ fancy_ScrollPosition.__name__ = true;
 fancy_ScrollPosition.prototype = {
 	__class__: fancy_ScrollPosition
 };
+var fancy_MoveHelper = function(el,callback) {
+	var _g = this;
+	this.el = el;
+	el.addEventListener("mousedown",function(e) {
+		if(_g.moving) return;
+		e.preventDefault();
+		_g.moving = true;
+		_g.x = e.clientX;
+		_g.y = e.clientY;
+	});
+	el;
+	window.document.addEventListener("mousemove",function(e1) {
+		if(!_g.moving) return;
+		e1.preventDefault();
+		dots_Dom.toggleClass(el,"dragging",true);
+		var dx = e1.clientX - _g.x;
+		var dy = e1.clientY - _g.y;
+		_g.x = e1.clientX;
+		_g.y = e1.clientY;
+		callback(dx,dy);
+	});
+	window.document.addEventListener("mouseup",function(e2) {
+		if(!_g.moving) return;
+		e2.preventDefault();
+		dots_Dom.toggleClass(el,"dragging",false);
+		_g.moving = false;
+	});
+};
+fancy_MoveHelper.__name__ = true;
+fancy_MoveHelper.prototype = {
+	__class__: fancy_MoveHelper
+};
 var fancy_SwipeHelper = function(el,callback) {
 	var _g = this;
 	this.el = el;
@@ -343,7 +375,7 @@ var fancy_SwipeHelper = function(el,callback) {
 			var dy = t.clientY - _g.y;
 			_g.x = t.clientX;
 			_g.y = t.clientY;
-			callback(dx,dy);
+			callback(-dx,-dy);
 		});
 	});
 	el;
@@ -414,7 +446,7 @@ var fancy_Grid9 = function(parent,options) {
 		if(null == _13) return null;
 		return _13;
 	})();
-	if(t3 != null) this.scrollerMaxLength = t3; else this.scrollerMaxLength = 200;
+	if(t3 != null) this.scrollerMaxLength = t3; else this.scrollerMaxLength = 100;
 	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
@@ -430,7 +462,7 @@ var fancy_Grid9 = function(parent,options) {
 	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
 	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
 	this.setGridSizeFromContainer();
-	this.resizeContent(1000,1000);
+	this.resizeContent(1000,2000);
 	this.sizeFixedElements(60,30,100,90);
 	this.refresh();
 	window.addEventListener("resize",function(_) {
@@ -443,7 +475,23 @@ var fancy_Grid9 = function(parent,options) {
 		_g.refresh();
 	});
 	new fancy_SwipeHelper(this.el,function(dx,dy) {
-		_g.movePosition(-dx,-dy);
+		_g.movePosition(dx,dy);
+		_g.refresh();
+	});
+	new fancy_MoveHelper(this.scrollerH,function(dx1,_2) {
+		var offset;
+		if(_g.gridHeight / _g.contentHeight < 1 && _g.gridWidth / _g.contentWidth < 1) offset = _g.scrollerSize + _g.scrollerMargin; else offset = 0;
+		var span = _g.gridWidth - _g.leftWidth - _g.rightWidth - offset;
+		_g.movePosition(dx1 * _g.contentWidth / span,0);
+		_g.refresh();
+	});
+	new fancy_MoveHelper(this.scrollerV,function(_3,dy1) {
+		var vratio = Math.min(_g.gridHeight / _g.contentHeight,1);
+		var offset1;
+		if(vratio < 1 && _g.gridWidth / _g.contentWidth < 1) offset1 = _g.scrollerSize + _g.scrollerMargin; else offset1 = 0;
+		var span1 = _g.gridHeight - _g.topHeight - _g.bottomHeight - offset1;
+		haxe_Log.trace(dy1,{ fileName : "Grid.hx", lineNumber : 280, className : "fancy.Grid9", methodName : "new", customParams : [dy1 * _g.contentHeight / span1]});
+		_g.movePosition(0,dy1 * _g.contentHeight / span1);
 		_g.refresh();
 	});
 };
@@ -594,19 +642,18 @@ fancy_Grid9.prototype = {
 		});
 	}
 	,refreshScrollers: function() {
-		var vspan = this.gridHeight - this.topHeight - this.bottomHeight;
 		var vratio = Math.min(this.gridHeight / this.contentHeight,1);
-		var hspan = this.gridWidth - this.leftWidth - this.rightWidth;
-		var hratio = Math.min(this.gridWidth / this.contentHeight,1);
+		var hratio = Math.min(this.gridWidth / this.contentWidth,1);
 		var offset;
 		if(vratio < 1 && hratio < 1) offset = this.scrollerSize + this.scrollerMargin; else offset = 0;
+		var vspan = this.gridHeight - this.topHeight - this.bottomHeight - offset;
+		var hspan = this.gridWidth - this.leftWidth - this.rightWidth - offset;
 		if(vratio == 1) this.scrollerV.style.display = "none"; else {
 			this.scrollerV.style.display = "block";
-			var idealLen = vratio * (vspan - offset);
+			var idealLen = vratio * vspan;
 			var len = Math.min(Math.max(this.scrollerMinLength,idealLen),this.scrollerMaxLength);
-			var lenRatio = len / idealLen;
 			var absPos = this.position.y / (this.contentHeight - this.gridHeight);
-			var pos = absPos * (vspan - len - offset);
+			var pos = absPos * (vspan - len);
 			this.scrollerV.style.top = "" + (this.topHeight + pos) + "px";
 			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth - this.scrollerSize - this.scrollerMargin) + "px";
 			this.scrollerV.style.width = "" + this.scrollerSize + "px";
@@ -614,11 +661,10 @@ fancy_Grid9.prototype = {
 		}
 		if(hratio == 1) this.scrollerH.style.display = "none"; else {
 			this.scrollerH.style.display = "block";
-			var idealLen1 = hratio * (hspan - offset);
+			var idealLen1 = hratio * hspan;
 			var len1 = Math.min(Math.max(this.scrollerMinLength,idealLen1),this.scrollerMaxLength);
-			var lenRatio1 = len1 / idealLen1;
 			var absPos1 = this.position.x / (this.contentWidth - this.gridWidth);
-			var pos1 = absPos1 * (hspan - len1 - offset);
+			var pos1 = absPos1 * (hspan - len1);
 			this.scrollerH.style.left = "" + (this.leftWidth + pos1) + "px";
 			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight - this.scrollerSize - this.scrollerMargin) + "px";
 			this.scrollerH.style.width = "" + len1 + "px";
@@ -776,6 +822,11 @@ haxe__$Int64__$_$_$Int64.__name__ = true;
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
 };
+var haxe_Log = function() { };
+haxe_Log.__name__ = true;
+haxe_Log.trace = function(v,infos) {
+	js_Boot.__trace(v,infos);
+};
 var haxe_ds_StringMap = function() {
 	this.h = { };
 };
@@ -886,6 +937,25 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = true;
+js_Boot.__unhtml = function(s) {
+	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+};
+js_Boot.__trace = function(v,i) {
+	var msg;
+	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
+	msg += js_Boot.__string_rec(v,"");
+	if(i != null && i.customParams != null) {
+		var _g = 0;
+		var _g1 = i.customParams;
+		while(_g < _g1.length) {
+			var v1 = _g1[_g];
+			++_g;
+			msg += "," + js_Boot.__string_rec(v1,"");
+		}
+	}
+	var d;
+	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
+};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;

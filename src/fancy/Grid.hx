@@ -6,6 +6,7 @@ using dots.Query;
 using thx.Arrays;
 using thx.Floats;
 using thx.Functions;
+using thx.Nulls;
 
 // TODO
 // - resize handle
@@ -127,6 +128,13 @@ class SwipeHelper {
   }
 }
 
+typedef Grid9Options = {
+  ?scrollerSize: Float,
+  ?scrollerMargin: Float,
+  ?scrollerMinLength: Float,
+  ?scrollerMaxLength: Float
+}
+
 class Grid9 {
   public var el(default, null): Element;
   public var contentWidth(default, null): Float;
@@ -153,9 +161,22 @@ class Grid9 {
   var centers: Array<Element>;
   var dirty: Bool;
 
-  public function new(parent: Element) {
+  var scrollerV: Element;
+  var scrollerH: Element;
+  var scrollerSize: Float;
+  var scrollerMargin: Float;
+  var scrollerMinLength: Float;
+  var scrollerMaxLength: Float;
+
+  public function new(parent: Element, ?options: Grid9Options) {
     position = new ScrollPosition();
+    scrollerSize = options.scrollerSize.or(10);
+    scrollerMargin = options.scrollerMargin.or(4);
+    scrollerMinLength = options.scrollerMinLength.or(10);
+    scrollerMaxLength = options.scrollerMaxLength.or(200);
     el = Dom.create("div.grid9", [
+      Dom.create('div.scroller.scroller-v'),
+      Dom.create('div.scroller.scroller-h'),
       Dom.create("div.row.top"),
       Dom.create("div.row.bottom"),
       Dom.create("div.column.left"),
@@ -173,6 +194,8 @@ class Grid9 {
     parent.append(el);
 
     // GET REFERENCES
+    scrollerV = Query.find(".scroller-v", el);
+    scrollerH = Query.find(".scroller-h", el);
     top     = Query.find(".row.top", el);
     bottom  = Query.find(".row.bottom", el);
     left    = Query.find(".column.left", el);
@@ -256,22 +279,12 @@ class Grid9 {
     rights.each.fn(_.style.left = '${gridWidth.min(contentWidth) - rightWidth}px');
     right.style.left = '${gridWidth.min(contentWidth) - rightWidth}px';
 
-    if(position.y > 0 || gridHeight < topHeight + bottomHeight)
-      Dom.addClass(top, 'overlay-bottom');
-    else
-      Dom.removeClass(top, 'overlay-bottom');
-    if(contentHeight > gridHeight && position.y < contentHeight - gridHeight)
-      Dom.addClass(bottom, 'overlay-top');
-    else
-      Dom.removeClass(bottom, 'overlay-top');
-    if(position.x > 0 || gridWidth < leftWidth + rightWidth)
-      Dom.addClass(left, 'overlay-right');
-    else
-      Dom.removeClass(left, 'overlay-right');
-    if(contentWidth > gridWidth && position.x < contentWidth - gridWidth) // && gridWidth > leftWidth + rightWidth)
-      Dom.addClass(right, 'overlay-left');
-    else
-      Dom.removeClass(right, 'overlay-left');
+    top.toggleClass('overlay-bottom', position.y > 0 || gridHeight < topHeight + bottomHeight);
+    bottom.toggleClass('overlay-top', contentHeight > gridHeight && position.y < contentHeight - gridHeight);
+    left.toggleClass('overlay-right', position.x > 0 || gridWidth < leftWidth + rightWidth);
+    right.toggleClass('overlay-left', contentWidth > gridWidth && position.x < contentWidth - gridWidth);
+
+    refreshScrollers();
   }
 
   public function resizeGrid(width: Float, height: Float) {
@@ -316,8 +329,40 @@ class Grid9 {
     rights.each.fn(_.style.width = '${rightWidth}px');
   }
 
-  public function scrollTo(x: Float, y: Float) {
-
+  function refreshScrollers() {
+    var vspan = gridHeight - topHeight - bottomHeight,
+        vratio = (gridHeight / contentHeight).min(1),
+        hspan = gridWidth - leftWidth - rightWidth,
+        hratio = (gridWidth / contentHeight).min(1),
+        offset = (vratio < 1 && hratio < 1) ? scrollerSize + scrollerMargin : 0;
+    if(vratio == 1) {
+      scrollerV.style.display = "none";
+    } else {
+      scrollerV.style.display = "block";
+      var idealLen = vratio * (vspan - offset);
+      var len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
+      var lenRatio = len / idealLen;
+      var absPos = (position.y / (contentHeight - gridHeight));
+      var pos = absPos * (vspan - len - offset);
+      scrollerV.style.top = '${topHeight + pos}px';
+      scrollerV.style.left = '${gridWidth.min(contentWidth) - rightWidth - scrollerSize - scrollerMargin}px';
+      scrollerV.style.width = '${scrollerSize}px';
+      scrollerV.style.height = '${len}px';
+    }
+    if(hratio == 1) {
+      scrollerH.style.display = "none";
+    } else {
+      scrollerH.style.display = "block";
+      var idealLen = hratio * (hspan - offset);
+      var len = scrollerMinLength.max(idealLen).min(scrollerMaxLength);
+      var lenRatio = len / idealLen;
+      var absPos = (position.x / (contentWidth - gridWidth));
+      var pos = absPos * (hspan - len - offset);
+      scrollerH.style.left = '${leftWidth + pos}px';
+      scrollerH.style.top = '${gridHeight.min(contentHeight) - bottomHeight - scrollerSize - scrollerMargin}px';
+      scrollerH.style.width = '${len}px';
+      scrollerH.style.height = '${scrollerSize}px';
+    }
   }
 }
 

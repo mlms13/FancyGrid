@@ -142,13 +142,15 @@ dots_Attributes.setStringAttribute = function(el,name,value) {
 };
 var dots_Dom = function() { };
 dots_Dom.__name__ = true;
-dots_Dom.addClass = function(el,className) {
-	el.classList.add(className);
-	return el;
-};
-dots_Dom.removeClass = function(el,className) {
-	el.classList.remove(className);
-	return el;
+dots_Dom.toggleClass = function(el,className,condition) {
+	if(null == condition) condition = !el.classList.contains(className);
+	if(condition) {
+		el.classList.add(className);
+		el;
+	} else {
+		el.classList.remove(className);
+		el;
+	}
 };
 dots_Dom.on = function(el,eventName,handler) {
 	el.addEventListener(eventName,handler);
@@ -378,11 +380,45 @@ fancy_SwipeHelper.prototype = {
 	}
 	,__class__: fancy_SwipeHelper
 };
-var fancy_Grid9 = function(parent) {
+var fancy_Grid9 = function(parent,options) {
 	var _g = this;
 	this.position = new fancy_ScrollPosition();
-	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
+	var t = (function() {
+		var _0 = options;
+		if(null == _0) return null;
+		var _1 = _0.scrollerSize;
+		if(null == _1) return null;
+		return _1;
+	})();
+	if(t != null) this.scrollerSize = t; else this.scrollerSize = 10;
+	var t1 = (function() {
+		var _01 = options;
+		if(null == _01) return null;
+		var _11 = _01.scrollerMargin;
+		if(null == _11) return null;
+		return _11;
+	})();
+	if(t1 != null) this.scrollerMargin = t1; else this.scrollerMargin = 4;
+	var t2 = (function() {
+		var _02 = options;
+		if(null == _02) return null;
+		var _12 = _02.scrollerMinLength;
+		if(null == _12) return null;
+		return _12;
+	})();
+	if(t2 != null) this.scrollerMinLength = t2; else this.scrollerMinLength = 10;
+	var t3 = (function() {
+		var _03 = options;
+		if(null == _03) return null;
+		var _13 = _03.scrollerMaxLength;
+		if(null == _13) return null;
+		return _13;
+	})();
+	if(t3 != null) this.scrollerMaxLength = t3; else this.scrollerMaxLength = 200;
+	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
 	dots_Dom.append(parent,this.el);
+	this.scrollerV = dots_Query.find(".scroller-v",this.el);
+	this.scrollerH = dots_Query.find(".scroller-h",this.el);
 	this.top = dots_Query.find(".row.top",this.el);
 	this.bottom = dots_Query.find(".row.bottom",this.el);
 	this.left = dots_Query.find(".column.left",this.el);
@@ -474,10 +510,11 @@ fancy_Grid9.prototype = {
 			return _3.style.left = "" + (Math.min(_g.gridWidth,_g.contentWidth) - _g.rightWidth) + "px";
 		});
 		this.right.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth) + "px";
-		if(this.position.y > 0 || this.gridHeight < this.topHeight + this.bottomHeight) dots_Dom.addClass(this.top,"overlay-bottom"); else dots_Dom.removeClass(this.top,"overlay-bottom");
-		if(this.contentHeight > this.gridHeight && this.position.y < this.contentHeight - this.gridHeight) dots_Dom.addClass(this.bottom,"overlay-top"); else dots_Dom.removeClass(this.bottom,"overlay-top");
-		if(this.position.x > 0 || this.gridWidth < this.leftWidth + this.rightWidth) dots_Dom.addClass(this.left,"overlay-right"); else dots_Dom.removeClass(this.left,"overlay-right");
-		if(this.contentWidth > this.gridWidth && this.position.x < this.contentWidth - this.gridWidth) dots_Dom.addClass(this.right,"overlay-left"); else dots_Dom.removeClass(this.right,"overlay-left");
+		dots_Dom.toggleClass(this.top,"overlay-bottom",this.position.y > 0 || this.gridHeight < this.topHeight + this.bottomHeight);
+		dots_Dom.toggleClass(this.bottom,"overlay-top",this.contentHeight > this.gridHeight && this.position.y < this.contentHeight - this.gridHeight);
+		dots_Dom.toggleClass(this.left,"overlay-right",this.position.x > 0 || this.gridWidth < this.leftWidth + this.rightWidth);
+		dots_Dom.toggleClass(this.right,"overlay-left",this.contentWidth > this.gridWidth && this.position.x < this.contentWidth - this.gridWidth);
+		this.refreshScrollers();
 	}
 	,resizeGrid: function(width,height) {
 		if(this.gridWidth == width && this.gridHeight == height) return;
@@ -555,6 +592,38 @@ fancy_Grid9.prototype = {
 		})(this.rights))(function(_5) {
 			return _5.style.width = "" + rightWidth + "px";
 		});
+	}
+	,refreshScrollers: function() {
+		var vspan = this.gridHeight - this.topHeight - this.bottomHeight;
+		var vratio = Math.min(this.gridHeight / this.contentHeight,1);
+		var hspan = this.gridWidth - this.leftWidth - this.rightWidth;
+		var hratio = Math.min(this.gridWidth / this.contentHeight,1);
+		var offset;
+		if(vratio < 1 && hratio < 1) offset = this.scrollerSize + this.scrollerMargin; else offset = 0;
+		if(vratio == 1) this.scrollerV.style.display = "none"; else {
+			this.scrollerV.style.display = "block";
+			var idealLen = vratio * (vspan - offset);
+			var len = Math.min(Math.max(this.scrollerMinLength,idealLen),this.scrollerMaxLength);
+			var lenRatio = len / idealLen;
+			var absPos = this.position.y / (this.contentHeight - this.gridHeight);
+			var pos = absPos * (vspan - len - offset);
+			this.scrollerV.style.top = "" + (this.topHeight + pos) + "px";
+			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerV.style.width = "" + this.scrollerSize + "px";
+			this.scrollerV.style.height = "" + len + "px";
+		}
+		if(hratio == 1) this.scrollerH.style.display = "none"; else {
+			this.scrollerH.style.display = "block";
+			var idealLen1 = hratio * (hspan - offset);
+			var len1 = Math.min(Math.max(this.scrollerMinLength,idealLen1),this.scrollerMaxLength);
+			var lenRatio1 = len1 / idealLen1;
+			var absPos1 = this.position.x / (this.contentWidth - this.gridWidth);
+			var pos1 = absPos1 * (hspan - len1 - offset);
+			this.scrollerH.style.left = "" + (this.leftWidth + pos1) + "px";
+			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerH.style.width = "" + len1 + "px";
+			this.scrollerH.style.height = "" + this.scrollerSize + "px";
+		}
 	}
 	,__class__: fancy_Grid9
 };

@@ -62,26 +62,34 @@ body {
   pointer-events: none;
 }
 
-.fancy-grid .grid9 .column.left { z-index: 450; }
-.fancy-grid .grid9 .row.top { z-index: 550; }
+.fancy-grid .grid9 .column.left { z-index: 11; }
+.fancy-grid .grid9 .row.top { z-index: 12; }
 
 .fancy-grid .grid9 .cell.middle.center { z-index: 0; }
-.fancy-grid .grid9 .cell.middle.right { z-index: 100; }
-.fancy-grid .grid9 .cell.middle.left { z-index: 360; }
+.fancy-grid .grid9 .cell.middle.right { z-index: 1; }
+.fancy-grid .grid9 .cell.middle.left { z-index: 4; }
 
-.fancy-grid .grid9 .column.right { z-index: 395; }
+.fancy-grid .grid9 .column.right { z-index: 10; }
 
-.fancy-grid .grid9 .cell.bottom.right { z-index: 190; }
-.fancy-grid .grid9 .cell.bottom.center { z-index: 100; }
-.fancy-grid .grid9 .cell.bottom.left { z-index: 360; }
+.fancy-grid .grid9 .cell.bottom.right { z-index: 3; }
+.fancy-grid .grid9 .cell.bottom.center { z-index: 2; }
+.fancy-grid .grid9 .cell.bottom.left { z-index: 5; }
 
-.fancy-grid .grid9 .row.bottom { z-index: 365; }
+.fancy-grid .grid9 .row.bottom { z-index: 6; }
 
-.fancy-grid .grid9 .cell.top.left { z-index: 390; }
-.fancy-grid .grid9 .cell.top.right { z-index: 380; }
-.fancy-grid .grid9 .cell.top.center { z-index: 370; }
+.fancy-grid .grid9 .cell.top.left { z-index: 9; }
+.fancy-grid .grid9 .cell.top.right { z-index: 8; }
+.fancy-grid .grid9 .cell.top.center { z-index: 7; }
 
+.fancy-grid .grid9 .scroller {
+  background-color: rgba(0,0,0,0.1);
+  position: absolute;
+  z-index: 20;
+}
 
+.fancy-grid .grid9 .scroller:hover {
+  background-color: rgba(0,0,0,0.2);
+}
 
 /* DEBUG */
 .fancy-grid .view {

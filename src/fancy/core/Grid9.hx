@@ -102,15 +102,15 @@ class Grid9 {
       Dom.create("div.row.bottom"),
       Dom.create("div.column.left"),
       Dom.create("div.column.right"),
-      Dom.create("div.cell.top.left"),
-      Dom.create("div.cell.top.center"),
-      Dom.create("div.cell.top.right"),
-      Dom.create("div.cell.middle.left"),
-      Dom.create("div.cell.middle.center"),
-      Dom.create("div.cell.middle.right"),
-      Dom.create("div.cell.bottom.left"),
-      Dom.create("div.cell.bottom.center"),
-      Dom.create("div.cell.bottom.right")
+      Dom.create("div.pane.top.left"),
+      Dom.create("div.pane.top.center"),
+      Dom.create("div.pane.top.right"),
+      Dom.create("div.pane.middle.left"),
+      Dom.create("div.pane.middle.center"),
+      Dom.create("div.pane.middle.right"),
+      Dom.create("div.pane.bottom.left"),
+      Dom.create("div.pane.bottom.center"),
+      Dom.create("div.pane.bottom.right")
     ]);
     parent.append(el);
 
@@ -121,22 +121,22 @@ class Grid9 {
     bottom  = Query.find(".row.bottom", el);
     left    = Query.find(".column.left", el);
     right   = Query.find(".column.right", el);
-    tops    = Query.select(".cell.top", el);
-    bottoms = Query.select(".cell.bottom", el);
-    lefts   = Query.select(".cell.left", el);
-    rights  = Query.select(".cell.right", el);
-    middles = Query.select(".cell.middle", el);
-    centers = Query.select(".cell.center", el);
+    tops    = Query.select(".pane.top", el);
+    bottoms = Query.select(".pane.bottom", el);
+    lefts   = Query.select(".pane.left", el);
+    rights  = Query.select(".pane.right", el);
+    middles = Query.select(".pane.middle", el);
+    centers = Query.select(".pane.center", el);
 
-    topLeft      = Query.find(".cell.top.left", el);
-    topCenter    = Query.find(".cell.top.center", el);
-    topRight     = Query.find(".cell.top.right", el);
-    middleLeft   = Query.find(".cell.middle.left", el);
-    middleCenter = Query.find(".cell.middle.center", el);
-    middleRight  = Query.find(".cell.middle.right", el);
-    bottomLeft   = Query.find(".cell.bottom.left", el);
-    bottomCenter = Query.find(".cell.bottom.center", el);
-    bottomRight  = Query.find(".cell.bottom.right", el);
+    topLeft      = Query.find(".pane.top.left", el);
+    topCenter    = Query.find(".pane.top.center", el);
+    topRight     = Query.find(".pane.top.right", el);
+    middleLeft   = Query.find(".pane.middle.left", el);
+    middleCenter = Query.find(".pane.middle.center", el);
+    middleRight  = Query.find(".pane.middle.right", el);
+    bottomLeft   = Query.find(".pane.bottom.left", el);
+    bottomCenter = Query.find(".pane.bottom.center", el);
+    bottomRight  = Query.find(".pane.bottom.right", el);
 
     // RESIZE
     setGridSizeFromContainer();

@@ -46,22 +46,38 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 };
+var IntIterator = function(min,max) {
+	this.min = min;
+	this.max = max;
+};
+IntIterator.__name__ = true;
+IntIterator.prototype = {
+	hasNext: function() {
+		return this.min < this.max;
+	}
+	,next: function() {
+		return this.min++;
+	}
+	,__class__: IntIterator
+};
 var Main = function() { };
 Main.__name__ = true;
 Main.main = function() {
-	var cellWidth = 50;
-	var cellHeight = 30;
+	var cellWidth = 78;
+	var cellHeight = 12;
+	var rows = 200000;
+	var columns = 100000;
 	var grid = new fancy_Grid(dots_Query.find(".my-fancy-grid-container"),{ render : function(row,col) {
-		return dots_Dom.create("div.cell",null,null,"" + row + ", " + col);
+		return dots_Dom.create("span.value",null,null,"" + row + ", " + col);
 	}, vOffset : function(row1) {
 		return cellHeight * row1;
-	}, hOffset : function(col1) {
-		return cellWidth * col1;
-	}, columns : 100000, rows : 200000, vSize : function() {
-		return 200 * cellHeight;
-	}, hSize : function() {
-		return 100 * cellWidth;
-	}});
+	}, hOffset : function(column) {
+		return cellWidth * column;
+	}, vSize : function(row2) {
+		return cellHeight;
+	}, hSize : function(column1) {
+		return cellWidth;
+	}, columns : columns, rows : rows, fixedLeft : 4, fixedTop : 3, fixedBottom : 2, fixedRight : 1});
 };
 Math.__name__ = true;
 var Std = function() { };
@@ -189,6 +205,10 @@ dots_Dom.appendChildren = function(el,children) {
 dots_Dom.append = function(el,child,children) {
 	if(child != null) dots_Dom.appendChild(el,child);
 	return dots_Dom.appendChildren(el,children != null?children:[]);
+};
+dots_Dom.empty = function(el) {
+	while(el.firstChild != null) el.removeChild(el.firstChild);
+	return el;
 };
 var dots_Query = function() { };
 dots_Query.__name__ = true;
@@ -325,23 +345,149 @@ dots_SelectorParser.prototype = {
 	}
 	,__class__: dots_SelectorParser
 };
-var fancy_View = function(parent) {
-	this.el = dots_Dom.create("div.view",null,[]);
-	dots_Dom.append(parent,this.el);
-};
-fancy_View.__name__ = true;
-fancy_View.prototype = {
-	__class__: fancy_View
-};
 var fancy_Grid = function(parent,options) {
 	var fancyGrid = dots_Dom.create("div.fancy-grid");
 	dots_Dom.append(parent,fancyGrid);
-	var view = new fancy_View(fancyGrid);
-	var grid9 = new fancy_core_Grid9(view.el,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0, scrollerSize : 10, contentWidth : 1000, contentHeight : 2000, topRail : 30, leftRail : 100});
+	var view = dots_Dom.create("div.view",null,[]);
+	dots_Dom.append(fancyGrid,view);
+	haxe_Log.trace("top",{ fileName : "Grid.hx", lineNumber : 60, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc4,row2) {
+		return options.vSize(row2) + acc4;
+	},0.0)]});
+	haxe_Log.trace("left",{ fileName : "Grid.hx", lineNumber : 63, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc5,col2) {
+		return options.hSize(col2) + acc5;
+	},0.0)]});
+	haxe_Log.trace("bottom",{ fileName : "Grid.hx", lineNumber : 66, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc6,row3) {
+		return options.vSize(row3) + acc6;
+	},0.0)]});
+	haxe_Log.trace("right",{ fileName : "Grid.hx", lineNumber : 69, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc7,col3) {
+		return options.hSize(col3) + acc7;
+	},0.0)]});
+	var grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0, scrollerSize : 10, contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1), contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1), topRail : thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc,row) {
+		return options.vSize(row) + acc;
+	},0.0), leftRail : thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc1,col) {
+		return options.hSize(col) + acc1;
+	},0.0), bottomRail : thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc2,row1) {
+		return options.vSize(row1) + acc2;
+	},0.0), rightRail : thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc3,col1) {
+		return options.hSize(col1) + acc3;
+	},0.0)});
+	this.topLeft = grid9.topLeft;
+	this.topCenter = grid9.topCenter;
+	this.topRight = grid9.topRight;
+	this.middleLeft = grid9.middleLeft;
+	this.middleCenter = grid9.middleCenter;
+	this.middleRight = grid9.middleRight;
+	this.bottomLeft = grid9.bottomLeft;
+	this.bottomCenter = grid9.bottomCenter;
+	this.bottomRight = grid9.bottomRight;
+	this.render = options.render;
+	this.vOffset = options.vOffset;
+	this.hOffset = options.hOffset;
+	this.rows = options.rows;
+	this.columns = options.columns;
+	var t = (function() {
+		var _0 = options;
+		if(null == _0) return null;
+		var _1 = _0.fixedLeft;
+		if(null == _1) return null;
+		return _1;
+	})();
+	if(t != null) this.fixedLeft = t; else this.fixedLeft = 0;
+	var t1 = (function() {
+		var _01 = options;
+		if(null == _01) return null;
+		var _11 = _01.fixedRight;
+		if(null == _11) return null;
+		return _11;
+	})();
+	if(t1 != null) this.fixedRight = t1; else this.fixedRight = 0;
+	var t2 = (function() {
+		var _02 = options;
+		if(null == _02) return null;
+		var _12 = _02.fixedTop;
+		if(null == _12) return null;
+		return _12;
+	})();
+	if(t2 != null) this.fixedTop = t2; else this.fixedTop = 0;
+	var t3 = (function() {
+		var _03 = options;
+		if(null == _03) return null;
+		var _13 = _03.fixedBottom;
+		if(null == _13) return null;
+		return _13;
+	})();
+	if(t3 != null) this.fixedBottom = t3; else this.fixedBottom = 0;
+	this.renderCorners();
 };
 fancy_Grid.__name__ = true;
 fancy_Grid.prototype = {
-	__class__: fancy_Grid
+	renderTo: function(parent,row,col) {
+		var el = this.renderCell(row,col);
+		dots_Dom.append(parent,el);
+	}
+	,renderCell: function(row,col) {
+		var cell = dots_Dom.create("div.cell.row-" + row + ".col-" + col,null,[this.render(row,col)]);
+		cell.style.top = "" + this.vOffset(row) + "px";
+		cell.style.left = "" + this.hOffset(col) + "px";
+		return cell;
+	}
+	,renderCorners: function() {
+		haxe_Log.trace("renderCorners",{ fileName : "Grid.hx", lineNumber : 130, className : "fancy.Grid", methodName : "renderCorners"});
+		var top = thx_Ints.min(this.fixedTop,this.rows);
+		var bottom = thx_Ints.max(this.rows - this.fixedBottom,0);
+		var left = thx_Ints.min(this.fixedLeft,this.columns);
+		var right = thx_Ints.max(this.columns - this.fixedRight,0);
+		var bottomLeftAnchor = dots_Dom.create("div.anchor.bottom.left");
+		var bottomRightAnchor = dots_Dom.create("div.anchor.bottom.right");
+		var topLeftAnchor = dots_Dom.create("div.anchor.top.left");
+		var topRightAnchor = dots_Dom.create("div.anchor.top.right");
+		var vDelta = this.vOffset(bottom);
+		var hDelta = this.hOffset(right);
+		bottomRightAnchor.style.left = "" + -hDelta + "px";
+		bottomRightAnchor.style.top = "" + -vDelta + "px";
+		bottomLeftAnchor.style.top = "" + -vDelta + "px";
+		topRightAnchor.style.left = "" + -hDelta + "px";
+		dots_Dom.empty(this.topLeft);
+		dots_Dom.empty(this.topRight);
+		dots_Dom.append(this.topLeft,topLeftAnchor);
+		dots_Dom.append(this.topRight,topRightAnchor);
+		var _g = 0;
+		while(_g < top) {
+			var r = _g++;
+			var _g1 = 0;
+			while(_g1 < left) {
+				var c = _g1++;
+				this.renderTo(topLeftAnchor,r,c);
+			}
+			var _g2 = right;
+			var _g11 = this.columns;
+			while(_g2 < _g11) {
+				var c1 = _g2++;
+				this.renderTo(topRightAnchor,r,c1);
+			}
+		}
+		dots_Dom.empty(this.bottomLeft);
+		dots_Dom.empty(this.bottomRight);
+		dots_Dom.append(this.bottomLeft,bottomLeftAnchor);
+		dots_Dom.append(this.bottomRight,bottomRightAnchor);
+		var _g12 = bottom;
+		var _g3 = this.rows;
+		while(_g12 < _g3) {
+			var r1 = _g12++;
+			var _g21 = 0;
+			while(_g21 < left) {
+				var c2 = _g21++;
+				this.renderTo(bottomLeftAnchor,r1,c2);
+			}
+			var _g31 = right;
+			var _g22 = this.columns;
+			while(_g31 < _g22) {
+				var c3 = _g31++;
+				this.renderTo(bottomRightAnchor,r1,c3);
+			}
+		}
+	}
+	,__class__: fancy_Grid
 };
 var fancy_core_DragMoveHelper = function(el,callback) {
 	var _g = this;
@@ -418,7 +564,7 @@ var fancy_core_Grid9 = function(parent,options) {
 		return _1;
 	})();
 	if(t != null) this.scrollerMargin = t; else this.scrollerMargin = 0;
-	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left"),dots_Dom.create("div.cell.top.center"),dots_Dom.create("div.cell.top.right"),dots_Dom.create("div.cell.middle.left"),dots_Dom.create("div.cell.middle.center"),dots_Dom.create("div.cell.middle.right"),dots_Dom.create("div.cell.bottom.left"),dots_Dom.create("div.cell.bottom.center"),dots_Dom.create("div.cell.bottom.right")]);
+	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.pane.top.left"),dots_Dom.create("div.pane.top.center"),dots_Dom.create("div.pane.top.right"),dots_Dom.create("div.pane.middle.left"),dots_Dom.create("div.pane.middle.center"),dots_Dom.create("div.pane.middle.right"),dots_Dom.create("div.pane.bottom.left"),dots_Dom.create("div.pane.bottom.center"),dots_Dom.create("div.pane.bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
 	this.scrollerH = dots_Query.find(".scroller-h",this.el);
@@ -426,21 +572,21 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.bottom = dots_Query.find(".row.bottom",this.el);
 	this.left = dots_Query.find(".column.left",this.el);
 	this.right = dots_Query.find(".column.right",this.el);
-	this.tops = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.top",this.el));
-	this.bottoms = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.bottom",this.el));
-	this.lefts = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.left",this.el));
-	this.rights = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.right",this.el));
-	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
-	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
-	this.topLeft = dots_Query.find(".cell.top.left",this.el);
-	this.topCenter = dots_Query.find(".cell.top.center",this.el);
-	this.topRight = dots_Query.find(".cell.top.right",this.el);
-	this.middleLeft = dots_Query.find(".cell.middle.left",this.el);
-	this.middleCenter = dots_Query.find(".cell.middle.center",this.el);
-	this.middleRight = dots_Query.find(".cell.middle.right",this.el);
-	this.bottomLeft = dots_Query.find(".cell.bottom.left",this.el);
-	this.bottomCenter = dots_Query.find(".cell.bottom.center",this.el);
-	this.bottomRight = dots_Query.find(".cell.bottom.right",this.el);
+	this.tops = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.top",this.el));
+	this.bottoms = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.bottom",this.el));
+	this.lefts = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.left",this.el));
+	this.rights = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.right",this.el));
+	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.middle",this.el));
+	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".pane.center",this.el));
+	this.topLeft = dots_Query.find(".pane.top.left",this.el);
+	this.topCenter = dots_Query.find(".pane.top.center",this.el);
+	this.topRight = dots_Query.find(".pane.top.right",this.el);
+	this.middleLeft = dots_Query.find(".pane.middle.left",this.el);
+	this.middleCenter = dots_Query.find(".pane.middle.center",this.el);
+	this.middleRight = dots_Query.find(".pane.middle.right",this.el);
+	this.bottomLeft = dots_Query.find(".pane.bottom.left",this.el);
+	this.bottomCenter = dots_Query.find(".pane.bottom.center",this.el);
+	this.bottomRight = dots_Query.find(".pane.bottom.right",this.el);
 	this.setGridSizeFromContainer();
 	this.resizeContent(options.contentWidth,options.contentHeight);
 	this.sizeRails((function($this) {
@@ -948,6 +1094,11 @@ haxe__$Int64__$_$_$Int64.__name__ = true;
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
 };
+var haxe_Log = function() { };
+haxe_Log.__name__ = true;
+haxe_Log.trace = function(v,infos) {
+	js_Boot.__trace(v,infos);
+};
 var haxe_ds_StringMap = function() {
 	this.h = { };
 };
@@ -1058,6 +1209,25 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = true;
+js_Boot.__unhtml = function(s) {
+	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+};
+js_Boot.__trace = function(v,i) {
+	var msg;
+	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
+	msg += js_Boot.__string_rec(v,"");
+	if(i != null && i.customParams != null) {
+		var _g = 0;
+		var _g1 = i.customParams;
+		while(_g < _g1.length) {
+			var v1 = _g1[_g];
+			++_g;
+			msg += "," + js_Boot.__string_rec(v1,"");
+		}
+	}
+	var d;
+	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
+};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;
@@ -1468,6 +1638,14 @@ var thx_Functions = function() { };
 thx_Functions.__name__ = true;
 thx_Functions.equality = function(a,b) {
 	return a == b;
+};
+var thx_Ints = function() { };
+thx_Ints.__name__ = true;
+thx_Ints.max = function(a,b) {
+	if(a > b) return a; else return b;
+};
+thx_Ints.min = function(a,b) {
+	if(a < b) return a; else return b;
 };
 var thx_Iterators = function() { };
 thx_Iterators.__name__ = true;

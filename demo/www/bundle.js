@@ -337,7 +337,7 @@ var fancy_Grid = function(parent,options) {
 	var fancyGrid = dots_Dom.create("div.fancy-grid");
 	dots_Dom.append(parent,fancyGrid);
 	var view = new fancy_View(fancyGrid);
-	var grid9 = new fancy_core_Grid9(view.el,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0});
+	var grid9 = new fancy_core_Grid9(view.el,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0, scrollerSize : 10, contentWidth : 1000, contentHeight : 2000, topRail : 30, leftRail : 100});
 };
 fancy_Grid.__name__ = true;
 fancy_Grid.prototype = {
@@ -377,22 +377,21 @@ fancy_core_DragMoveHelper.prototype = {
 };
 var fancy_core_Grid9 = function(parent,options) {
 	var _g = this;
-	if(null == options) options = { };
 	this.position = { x : 0.0, y : 0.0};
 	var offset = function() {
 		if(_g.contentWidth > _g.gridWidth && _g.contentHeight > _g.gridHeight) return _g.scrollerSize + _g.scrollerMargin; else return 0;
 	};
 	var viewHeight = function() {
-		return _g.gridHeight - _g.topHeight - _g.bottomHeight;
+		return _g.gridHeight - _g.topRail - _g.bottomRail;
 	};
 	var contentHeight = function() {
-		return _g.contentHeight - _g.topHeight - _g.bottomHeight;
+		return _g.contentHeight - _g.topRail - _g.bottomRail;
 	};
 	var viewWidth = function() {
-		return _g.gridWidth - _g.leftWidth - _g.rightWidth;
+		return _g.gridWidth - _g.leftRail - _g.rightRail;
 	};
 	var contentWidth = function() {
-		return _g.contentWidth - _g.leftWidth - _g.rightWidth;
+		return _g.contentWidth - _g.leftRail - _g.rightRail;
 	};
 	var minScrollerSize;
 	if(null != options.scrollerMinSize) {
@@ -410,22 +409,15 @@ var fancy_core_Grid9 = function(parent,options) {
 	} else maxScrollerSize = null;
 	this.scrollerVDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewHeight, contentSize : contentHeight, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewHeight,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	this.scrollerHDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewWidth, contentSize : contentWidth, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewWidth,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
+	this.scrollerSize = options.scrollerSize;
 	var t = (function() {
 		var _0 = options;
 		if(null == _0) return null;
-		var _1 = _0.scrollerSize;
+		var _1 = _0.scrollerMargin;
 		if(null == _1) return null;
 		return _1;
 	})();
-	if(t != null) this.scrollerSize = t; else this.scrollerSize = 10;
-	var t1 = (function() {
-		var _01 = options;
-		if(null == _01) return null;
-		var _11 = _01.scrollerMargin;
-		if(null == _11) return null;
-		return _11;
-	})();
-	if(t1 != null) this.scrollerMargin = t1; else this.scrollerMargin = 4;
+	if(t != null) this.scrollerMargin = t; else this.scrollerMargin = 0;
 	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
@@ -440,9 +432,62 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.rights = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.right",this.el));
 	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
 	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
+	this.topLeft = dots_Query.find(".cell.top.left",this.el);
+	this.topCenter = dots_Query.find(".cell.top.center",this.el);
+	this.topRight = dots_Query.find(".cell.top.right",this.el);
+	this.middleLeft = dots_Query.find(".cell.middle.left",this.el);
+	this.middleCenter = dots_Query.find(".cell.middle.center",this.el);
+	this.middleRight = dots_Query.find(".cell.middle.right",this.el);
+	this.bottomLeft = dots_Query.find(".cell.bottom.left",this.el);
+	this.bottomCenter = dots_Query.find(".cell.bottom.center",this.el);
+	this.bottomRight = dots_Query.find(".cell.bottom.right",this.el);
 	this.setGridSizeFromContainer();
-	this.resizeContent(1000,2200);
-	this.sizeFixedElements(100,100,100,100);
+	this.resizeContent(options.contentWidth,options.contentHeight);
+	this.sizeRails((function($this) {
+		var $r;
+		var t1 = (function() {
+			var _01 = options;
+			if(null == _01) return null;
+			var _11 = _01.topRail;
+			if(null == _11) return null;
+			return _11;
+		})();
+		$r = t1 != null?t1:0;
+		return $r;
+	}(this)),(function($this) {
+		var $r;
+		var t2 = (function() {
+			var _02 = options;
+			if(null == _02) return null;
+			var _12 = _02.bottomRail;
+			if(null == _12) return null;
+			return _12;
+		})();
+		$r = t2 != null?t2:0;
+		return $r;
+	}(this)),(function($this) {
+		var $r;
+		var t3 = (function() {
+			var _03 = options;
+			if(null == _03) return null;
+			var _13 = _03.leftRail;
+			if(null == _13) return null;
+			return _13;
+		})();
+		$r = t3 != null?t3:0;
+		return $r;
+	}(this)),(function($this) {
+		var $r;
+		var t4 = (function() {
+			var _04 = options;
+			if(null == _04) return null;
+			var _14 = _04.rightRail;
+			if(null == _14) return null;
+			return _14;
+		})();
+		$r = t4 != null?t4:0;
+		return $r;
+	}(this)));
 	this.refresh();
 	window.addEventListener("resize",function(_) {
 		_g.setGridSizeFromContainer();
@@ -485,8 +530,8 @@ fancy_core_Grid9.prototype = {
 			var this1 = this.scrollerVDimensions.contentToScrollerPosition(this.position.y);
 			pos = this1();
 			var size = this.scrollerVDimensions.scrollerSize();
-			this.scrollerV.style.top = "" + (this.topHeight + pos) + "px";
-			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerV.style.top = "" + (this.topRail + pos) + "px";
+			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightRail - this.scrollerSize - this.scrollerMargin) + "px";
 			this.scrollerV.style.width = "" + this.scrollerSize + "px";
 			this.scrollerV.style.height = "" + size + "px";
 		}
@@ -496,8 +541,8 @@ fancy_core_Grid9.prototype = {
 			var this2 = this.scrollerHDimensions.contentToScrollerPosition(this.position.x);
 			pos1 = this2();
 			var size1 = this.scrollerHDimensions.scrollerSize();
-			this.scrollerH.style.left = "" + (this.leftWidth + pos1) + "px";
-			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerH.style.left = "" + (this.leftRail + pos1) + "px";
+			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomRail - this.scrollerSize - this.scrollerMargin) + "px";
 			this.scrollerH.style.width = "" + size1 + "px";
 			this.scrollerH.style.height = "" + this.scrollerSize + "px";
 		}
@@ -535,7 +580,7 @@ fancy_core_Grid9.prototype = {
 				return;
 			};
 		})(this.middles))(function(_) {
-			return _.style.top = "" + (-_g.position.y + _g.topHeight) + "px";
+			return _.style.top = "" + (-_g.position.y + _g.topRail) + "px";
 		});
 		((function(_e1) {
 			return function(effect1) {
@@ -543,16 +588,16 @@ fancy_core_Grid9.prototype = {
 				return;
 			};
 		})(this.bottoms))(function(_1) {
-			return _1.style.top = "" + (Math.min(_g.gridHeight,_g.contentHeight) - _g.bottomHeight) + "px";
+			return _1.style.top = "" + (Math.min(_g.gridHeight,_g.contentHeight) - _g.bottomRail) + "px";
 		});
-		this.bottom.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight) + "px";
+		this.bottom.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomRail) + "px";
 		((function(_e2) {
 			return function(effect2) {
 				thx_Arrays.each(_e2,effect2);
 				return;
 			};
 		})(this.centers))(function(_2) {
-			return _2.style.left = "" + (-_g.position.x + _g.leftWidth) + "px";
+			return _2.style.left = "" + (-_g.position.x + _g.leftRail) + "px";
 		});
 		((function(_e3) {
 			return function(effect3) {
@@ -560,12 +605,12 @@ fancy_core_Grid9.prototype = {
 				return;
 			};
 		})(this.rights))(function(_3) {
-			return _3.style.left = "" + (Math.min(_g.gridWidth,_g.contentWidth) - _g.rightWidth) + "px";
+			return _3.style.left = "" + (Math.min(_g.gridWidth,_g.contentWidth) - _g.rightRail) + "px";
 		});
-		this.right.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth) + "px";
-		dots_Dom.toggleClass(this.top,"overlay-bottom",this.position.y > 0 || this.gridHeight < this.topHeight + this.bottomHeight);
+		this.right.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightRail) + "px";
+		dots_Dom.toggleClass(this.top,"overlay-bottom",this.position.y > 0 || this.gridHeight < this.topRail + this.bottomRail);
 		dots_Dom.toggleClass(this.bottom,"overlay-top",this.contentHeight > this.gridHeight && this.position.y < this.contentHeight - this.gridHeight);
-		dots_Dom.toggleClass(this.left,"overlay-right",this.position.x > 0 || this.gridWidth < this.leftWidth + this.rightWidth);
+		dots_Dom.toggleClass(this.left,"overlay-right",this.position.x > 0 || this.gridWidth < this.leftRail + this.rightRail);
 		dots_Dom.toggleClass(this.right,"overlay-left",this.contentWidth > this.gridWidth && this.position.x < this.contentWidth - this.gridWidth);
 		this.refreshScrollers();
 	}
@@ -585,22 +630,22 @@ fancy_core_Grid9.prototype = {
 		this.top.style.width = this.bottom.style.width = "" + Math.min(this.gridWidth,this.contentWidth) + "px";
 		this.left.style.height = this.right.style.height = "" + Math.min(this.gridHeight,this.contentHeight) + "px";
 	}
-	,sizeFixedElements: function(topHeight,bottomHeight,leftWidth,rightWidth) {
+	,sizeRails: function(topRail,bottomRail,leftRail,rightRail) {
 		var _g = this;
-		if(this.topHeight == topHeight && this.bottomHeight == bottomHeight && this.leftWidth == leftWidth && this.rightWidth == rightWidth) return;
+		if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail) return;
 		this.dirty = true;
-		this.topHeight = topHeight;
-		this.bottomHeight = bottomHeight;
-		this.leftWidth = leftWidth;
-		this.rightWidth = rightWidth;
-		this.top.style.height = "" + topHeight + "px";
+		this.topRail = topRail;
+		this.bottomRail = bottomRail;
+		this.leftRail = leftRail;
+		this.rightRail = rightRail;
+		this.top.style.height = "" + topRail + "px";
 		((function(_e) {
 			return function(effect) {
 				thx_Arrays.each(_e,effect);
 				return;
 			};
 		})(this.tops))(function(_) {
-			return _.style.height = "" + topHeight + "px";
+			return _.style.height = "" + topRail + "px";
 		});
 		((function(_e1) {
 			return function(effect1) {
@@ -608,25 +653,25 @@ fancy_core_Grid9.prototype = {
 				return;
 			};
 		})(this.middles))(function(_1) {
-			return _1.style.height = "" + (_g.contentHeight - topHeight - bottomHeight) + "px";
+			return _1.style.height = "" + (_g.contentHeight - topRail - bottomRail) + "px";
 		});
-		this.bottom.style.height = "" + bottomHeight + "px";
+		this.bottom.style.height = "" + bottomRail + "px";
 		((function(_e2) {
 			return function(effect2) {
 				thx_Arrays.each(_e2,effect2);
 				return;
 			};
 		})(this.bottoms))(function(_2) {
-			return _2.style.height = "" + bottomHeight + "px";
+			return _2.style.height = "" + bottomRail + "px";
 		});
-		this.left.style.width = "" + leftWidth + "px";
+		this.left.style.width = "" + leftRail + "px";
 		((function(_e3) {
 			return function(effect3) {
 				thx_Arrays.each(_e3,effect3);
 				return;
 			};
 		})(this.lefts))(function(_3) {
-			return _3.style.width = "" + leftWidth + "px";
+			return _3.style.width = "" + leftRail + "px";
 		});
 		((function(_e4) {
 			return function(effect4) {
@@ -634,16 +679,16 @@ fancy_core_Grid9.prototype = {
 				return;
 			};
 		})(this.centers))(function(_4) {
-			return _4.style.width = "" + (_g.contentWidth - leftWidth - rightWidth) + "px";
+			return _4.style.width = "" + (_g.contentWidth - leftRail - rightRail) + "px";
 		});
-		this.right.style.width = "" + rightWidth + "px";
+		this.right.style.width = "" + rightRail + "px";
 		((function(_e5) {
 			return function(effect5) {
 				thx_Arrays.each(_e5,effect5);
 				return;
 			};
 		})(this.rights))(function(_5) {
-			return _5.style.width = "" + rightWidth + "px";
+			return _5.style.width = "" + rightRail + "px";
 		});
 	}
 	,__class__: fancy_core_Grid9

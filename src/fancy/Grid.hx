@@ -27,7 +27,12 @@ class Grid {
     var view = new View(fancyGrid);
     var grid9 = new Grid9(view.el, {
       scrollerMinSize : 10.0,
-      scrollerMaxSize : 100.0
+      scrollerMaxSize : 100.0,
+      scrollerSize : 10,
+      contentWidth : 1000,
+      contentHeight : 2000,
+      topRail : 30,
+      leftRail : 100
     });
   }
 }

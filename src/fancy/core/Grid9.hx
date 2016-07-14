@@ -8,15 +8,17 @@ using thx.Floats;
 using thx.Functions;
 using thx.Nulls;
 
-// TODO
-// - initial size
-// - initial left/top/right/bottom
-
 typedef Grid9Options = {
-  ?scrollerSize: Float,
+  contentWidth: Float,
+  contentHeight: Float,
+  scrollerSize: Float,
   ?scrollerMargin: Float,
   ?scrollerMinSize: Float,
-  ?scrollerMaxSize: Float
+  ?scrollerMaxSize: Float,
+  ?topRail : Float,
+  ?bottomRail : Float,
+  ?leftRail : Float,
+  ?rightRail : Float
 }
 
 class Grid9 {
@@ -26,10 +28,21 @@ class Grid9 {
   public var gridWidth(default, null): Float;
   public var gridHeight(default, null): Float;
 
-  public var topHeight(default, null): Float;
-  public var bottomHeight(default, null): Float;
-  public var leftWidth(default, null): Float;
-  public var rightWidth(default, null): Float;
+  public var topRail(default, null): Float;
+  public var bottomRail(default, null): Float;
+  public var leftRail(default, null): Float;
+  public var rightRail(default, null): Float;
+
+
+  public var topLeft(default, null): Element;
+  public var topCenter(default, null): Element;
+  public var topRight(default, null): Element;
+  public var middleLeft(default, null): Element;
+  public var middleCenter(default, null): Element;
+  public var middleRight(default, null): Element;
+  public var bottomLeft(default, null): Element;
+  public var bottomCenter(default, null): Element;
+  public var bottomRight(default, null): Element;
 
   public var position: {
     x: Float,
@@ -55,15 +68,13 @@ class Grid9 {
   var scrollerVDimensions: ScrollerDimensions;
   var scrollerHDimensions: ScrollerDimensions;
 
-  public function new(parent: Element, ?options: Grid9Options) {
-    if(null == options)
-      options = {};
+  public function new(parent: Element, options: Grid9Options) {
     position = { x: 0.0, y: 0.0 };
     var offset = Lazy.of(willDisplayBothScrollbar() ? scrollerSize + scrollerMargin : 0),
-        viewHeight = Lazy.of(gridHeight - topHeight - bottomHeight),
-        contentHeight = Lazy.of(contentHeight - topHeight - bottomHeight),
-        viewWidth = Lazy.of(gridWidth - leftWidth - rightWidth),
-        contentWidth = Lazy.of(contentWidth - leftWidth - rightWidth),
+        viewHeight = Lazy.of(gridHeight - topRail - bottomRail),
+        contentHeight = Lazy.of(contentHeight - topRail - bottomRail),
+        viewWidth = Lazy.of(gridWidth - leftRail - rightRail),
+        contentWidth = Lazy.of(contentWidth - leftRail - rightRail),
         minScrollerSize = null != options.scrollerMinSize ? Lazy.ofValue(options.scrollerMinSize) : null,
         maxScrollerSize = null != options.scrollerMaxSize ? Lazy.ofValue(options.scrollerMaxSize) : null;
     scrollerVDimensions = new ScrollerDimensions({
@@ -81,8 +92,8 @@ class Grid9 {
       maxScrollerSize: maxScrollerSize
     });
 
-    scrollerSize = options.scrollerSize.or(10);
-    scrollerMargin = options.scrollerMargin.or(4);
+    scrollerSize = options.scrollerSize;
+    scrollerMargin = options.scrollerMargin.or(0);
 
     el = Dom.create("div.grid9", [
       Dom.create('div.scroller.scroller-v'),
@@ -117,11 +128,25 @@ class Grid9 {
     middles = Query.select(".cell.middle", el);
     centers = Query.select(".cell.center", el);
 
+    topLeft      = Query.find(".cell.top.left", el);
+    topCenter    = Query.find(".cell.top.center", el);
+    topRight     = Query.find(".cell.top.right", el);
+    middleLeft   = Query.find(".cell.middle.left", el);
+    middleCenter = Query.find(".cell.middle.center", el);
+    middleRight  = Query.find(".cell.middle.right", el);
+    bottomLeft   = Query.find(".cell.bottom.left", el);
+    bottomCenter = Query.find(".cell.bottom.center", el);
+    bottomRight  = Query.find(".cell.bottom.right", el);
+
     // RESIZE
-    // TODO no hard coded
     setGridSizeFromContainer();
-    resizeContent(1000, 2200); // TODO
-    sizeFixedElements(100, 100, 100, 100); // TODO
+    resizeContent(options.contentWidth, options.contentHeight);
+    sizeRails(
+      options.topRail.or(0),
+      options.bottomRail.or(0),
+      options.leftRail.or(0),
+      options.rightRail.or(0)
+    );
     refresh();
 
     // EVENTS
@@ -165,8 +190,8 @@ class Grid9 {
       scrollerV.style.display = "block";
       var pos = scrollerVDimensions.contentToScrollerPosition(position.y).value,
           size = scrollerVDimensions.scrollerSize.value;
-      scrollerV.style.top = '${topHeight + pos}px';
-      scrollerV.style.left = '${gridWidth.min(contentWidth) - rightWidth - scrollerSize - scrollerMargin}px';
+      scrollerV.style.top = '${topRail + pos}px';
+      scrollerV.style.left = '${gridWidth.min(contentWidth) - rightRail - scrollerSize - scrollerMargin}px';
       scrollerV.style.width = '${scrollerSize}px';
       scrollerV.style.height = '${size}px';
     }
@@ -176,8 +201,8 @@ class Grid9 {
       scrollerH.style.display = "block";
       var pos = scrollerHDimensions.contentToScrollerPosition(position.x).value,
           size = scrollerHDimensions.scrollerSize.value;
-      scrollerH.style.left = '${leftWidth + pos}px';
-      scrollerH.style.top = '${gridHeight.min(contentHeight) - bottomHeight - scrollerSize - scrollerMargin}px';
+      scrollerH.style.left = '${leftRail + pos}px';
+      scrollerH.style.top = '${gridHeight.min(contentHeight) - bottomRail - scrollerSize - scrollerMargin}px';
       scrollerH.style.width = '${size}px';
       scrollerH.style.height = '${scrollerSize}px';
     }
@@ -223,17 +248,17 @@ class Grid9 {
   public function refresh() {
     if(!dirty) return;
     dirty = false;
-    middles.each.fn(_.style.top = '${-position.y + topHeight}px');
-    bottoms.each.fn(_.style.top = '${gridHeight.min(contentHeight) - bottomHeight}px');
-    bottom.style.top = '${gridHeight.min(contentHeight) - bottomHeight}px';
+    middles.each.fn(_.style.top = '${-position.y + topRail}px');
+    bottoms.each.fn(_.style.top = '${gridHeight.min(contentHeight) - bottomRail}px');
+    bottom.style.top = '${gridHeight.min(contentHeight) - bottomRail}px';
 
-    centers.each.fn(_.style.left = '${-position.x + leftWidth}px');
-    rights.each.fn(_.style.left = '${gridWidth.min(contentWidth) - rightWidth}px');
-    right.style.left = '${gridWidth.min(contentWidth) - rightWidth}px';
+    centers.each.fn(_.style.left = '${-position.x + leftRail}px');
+    rights.each.fn(_.style.left = '${gridWidth.min(contentWidth) - rightRail}px');
+    right.style.left = '${gridWidth.min(contentWidth) - rightRail}px';
 
-    top.toggleClass('overlay-bottom', position.y > 0 || gridHeight < topHeight + bottomHeight);
+    top.toggleClass('overlay-bottom', position.y > 0 || gridHeight < topRail + bottomRail);
     bottom.toggleClass('overlay-top', contentHeight > gridHeight && position.y < contentHeight - gridHeight);
-    left.toggleClass('overlay-right', position.x > 0 || gridWidth < leftWidth + rightWidth);
+    left.toggleClass('overlay-right', position.x > 0 || gridWidth < leftRail + rightRail);
     right.toggleClass('overlay-left', contentWidth > gridWidth && position.x < contentWidth - gridWidth);
 
     refreshScrollers();
@@ -261,23 +286,23 @@ class Grid9 {
     left.style.height = right.style.height = '${gridHeight.min(contentHeight)}px';
   }
 
-  public function sizeFixedElements(topHeight: Float, bottomHeight: Float, leftWidth: Float, rightWidth: Float) {
-    if(this.topHeight == topHeight && this.bottomHeight == bottomHeight && this.leftWidth == leftWidth && this.rightWidth == rightWidth)
+  public function sizeRails(topRail: Float, bottomRail: Float, leftRail: Float, rightRail: Float) {
+    if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail)
       return;
     dirty = true;
-    this.topHeight = topHeight;
-    this.bottomHeight = bottomHeight;
-    this.leftWidth = leftWidth;
-    this.rightWidth = rightWidth;
-    top.style.height = '${topHeight}px';
-    tops.each.fn(_.style.height = '${topHeight}px');
-    middles.each.fn(_.style.height = '${contentHeight - topHeight - bottomHeight}px');
-    bottom.style.height = '${bottomHeight}px';
-    bottoms.each.fn(_.style.height = '${bottomHeight}px');
-    left.style.width = '${leftWidth}px';
-    lefts.each.fn(_.style.width = '${leftWidth}px');
-    centers.each.fn(_.style.width = '${contentWidth - leftWidth - rightWidth}px');
-    right.style.width = '${rightWidth}px';
-    rights.each.fn(_.style.width = '${rightWidth}px');
+    this.topRail = topRail;
+    this.bottomRail = bottomRail;
+    this.leftRail = leftRail;
+    this.rightRail = rightRail;
+    top.style.height = '${topRail}px';
+    tops.each.fn(_.style.height = '${topRail}px');
+    middles.each.fn(_.style.height = '${contentHeight - topRail - bottomRail}px');
+    bottom.style.height = '${bottomRail}px';
+    bottoms.each.fn(_.style.height = '${bottomRail}px');
+    left.style.width = '${leftRail}px';
+    lefts.each.fn(_.style.width = '${leftRail}px');
+    centers.each.fn(_.style.width = '${contentWidth - leftRail - rightRail}px');
+    right.style.width = '${rightRail}px';
+    rights.each.fn(_.style.width = '${rightRail}px');
   }
 }

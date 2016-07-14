@@ -12,6 +12,7 @@ typedef Grid9Options = {
   contentWidth: Float,
   contentHeight: Float,
   scrollerSize: Float,
+  ?onScroll: Float -> Float -> Void,
   ?scrollerMargin: Float,
   ?scrollerMinSize: Float,
   ?scrollerMaxSize: Float,
@@ -68,8 +69,11 @@ class Grid9 {
   var scrollerVDimensions: ScrollerDimensions;
   var scrollerHDimensions: ScrollerDimensions;
 
+  var onScroll: Float -> Float -> Void;
+
   public function new(parent: Element, options: Grid9Options) {
     position = { x: 0.0, y: 0.0 };
+    onScroll = options.onScroll.or(function(x, y) {});
     var offset = Lazy.of(willDisplayBothScrollbar() ? scrollerSize + scrollerMargin : 0),
         viewHeight = Lazy.of(gridHeight - topRail - bottomRail),
         contentHeight = Lazy.of(contentHeight - topRail - bottomRail),
@@ -236,6 +240,7 @@ class Grid9 {
     }
 
     if(oldx == position.x && oldy == position.y) return;
+    onScroll(position.x, position.y);
     dirty = true;
   }
 

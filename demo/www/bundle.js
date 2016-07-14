@@ -346,22 +346,11 @@ dots_SelectorParser.prototype = {
 	,__class__: dots_SelectorParser
 };
 var fancy_Grid = function(parent,options) {
+	var _g = this;
 	var fancyGrid = dots_Dom.create("div.fancy-grid");
 	dots_Dom.append(parent,fancyGrid);
 	var view = dots_Dom.create("div.view",null,[]);
 	dots_Dom.append(fancyGrid,view);
-	haxe_Log.trace("top",{ fileName : "Grid.hx", lineNumber : 60, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc4,row2) {
-		return options.vSize(row2) + acc4;
-	},0.0)]});
-	haxe_Log.trace("left",{ fileName : "Grid.hx", lineNumber : 63, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc5,col2) {
-		return options.hSize(col2) + acc5;
-	},0.0)]});
-	haxe_Log.trace("bottom",{ fileName : "Grid.hx", lineNumber : 66, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc6,row3) {
-		return options.vSize(row3) + acc6;
-	},0.0)]});
-	haxe_Log.trace("right",{ fileName : "Grid.hx", lineNumber : 69, className : "fancy.Grid", methodName : "new", customParams : [thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc7,col3) {
-		return options.hSize(col3) + acc7;
-	},0.0)]});
 	var grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0, scrollerSize : 10, contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1), contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1), topRail : thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc,row) {
 		return options.vSize(row) + acc;
 	},0.0), leftRail : thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc1,col) {
@@ -370,7 +359,9 @@ var fancy_Grid = function(parent,options) {
 		return options.vSize(row1) + acc2;
 	},0.0), rightRail : thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc3,col1) {
 		return options.hSize(col1) + acc3;
-	},0.0)});
+	},0.0), onScroll : function(x,y) {
+		_g.renderMiddleLeft(y);
+	}});
 	this.topLeft = grid9.topLeft;
 	this.topCenter = grid9.topCenter;
 	this.topRight = grid9.topRight;
@@ -431,8 +422,9 @@ fancy_Grid.prototype = {
 		cell.style.left = "" + this.hOffset(col) + "px";
 		return cell;
 	}
+	,renderMiddleLeft: function(v) {
+	}
 	,renderCorners: function() {
-		haxe_Log.trace("renderCorners",{ fileName : "Grid.hx", lineNumber : 130, className : "fancy.Grid", methodName : "renderCorners"});
 		var top = thx_Ints.min(this.fixedTop,this.rows);
 		var bottom = thx_Ints.max(this.rows - this.fixedBottom,0);
 		var left = thx_Ints.min(this.fixedLeft,this.columns);
@@ -524,6 +516,15 @@ fancy_core_DragMoveHelper.prototype = {
 var fancy_core_Grid9 = function(parent,options) {
 	var _g = this;
 	this.position = { x : 0.0, y : 0.0};
+	var t = (function() {
+		var _0 = options;
+		if(null == _0) return null;
+		var _1 = _0.onScroll;
+		if(null == _1) return null;
+		return _1;
+	})();
+	if(t != null) this.onScroll = t; else this.onScroll = function(x,y) {
+	};
 	var offset = function() {
 		if(_g.contentWidth > _g.gridWidth && _g.contentHeight > _g.gridHeight) return _g.scrollerSize + _g.scrollerMargin; else return 0;
 	};
@@ -556,14 +557,14 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.scrollerVDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewHeight, contentSize : contentHeight, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewHeight,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	this.scrollerHDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewWidth, contentSize : contentWidth, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewWidth,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	this.scrollerSize = options.scrollerSize;
-	var t = (function() {
-		var _0 = options;
-		if(null == _0) return null;
-		var _1 = _0.scrollerMargin;
-		if(null == _1) return null;
-		return _1;
+	var t1 = (function() {
+		var _01 = options;
+		if(null == _01) return null;
+		var _11 = _01.scrollerMargin;
+		if(null == _11) return null;
+		return _11;
 	})();
-	if(t != null) this.scrollerMargin = t; else this.scrollerMargin = 0;
+	if(t1 != null) this.scrollerMargin = t1; else this.scrollerMargin = 0;
 	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.pane.top.left"),dots_Dom.create("div.pane.top.center"),dots_Dom.create("div.pane.top.right"),dots_Dom.create("div.pane.middle.left"),dots_Dom.create("div.pane.middle.center"),dots_Dom.create("div.pane.middle.right"),dots_Dom.create("div.pane.bottom.left"),dots_Dom.create("div.pane.bottom.center"),dots_Dom.create("div.pane.bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
@@ -591,21 +592,10 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.resizeContent(options.contentWidth,options.contentHeight);
 	this.sizeRails((function($this) {
 		var $r;
-		var t1 = (function() {
-			var _01 = options;
-			if(null == _01) return null;
-			var _11 = _01.topRail;
-			if(null == _11) return null;
-			return _11;
-		})();
-		$r = t1 != null?t1:0;
-		return $r;
-	}(this)),(function($this) {
-		var $r;
 		var t2 = (function() {
 			var _02 = options;
 			if(null == _02) return null;
-			var _12 = _02.bottomRail;
+			var _12 = _02.topRail;
 			if(null == _12) return null;
 			return _12;
 		})();
@@ -616,7 +606,7 @@ var fancy_core_Grid9 = function(parent,options) {
 		var t3 = (function() {
 			var _03 = options;
 			if(null == _03) return null;
-			var _13 = _03.leftRail;
+			var _13 = _03.bottomRail;
 			if(null == _13) return null;
 			return _13;
 		})();
@@ -627,11 +617,22 @@ var fancy_core_Grid9 = function(parent,options) {
 		var t4 = (function() {
 			var _04 = options;
 			if(null == _04) return null;
-			var _14 = _04.rightRail;
+			var _14 = _04.leftRail;
 			if(null == _14) return null;
 			return _14;
 		})();
 		$r = t4 != null?t4:0;
+		return $r;
+	}(this)),(function($this) {
+		var $r;
+		var t5 = (function() {
+			var _05 = options;
+			if(null == _05) return null;
+			var _15 = _05.rightRail;
+			if(null == _15) return null;
+			return _15;
+		})();
+		$r = t5 != null?t5:0;
 		return $r;
 	}(this)));
 	this.refresh();
@@ -709,6 +710,7 @@ fancy_core_Grid9.prototype = {
 		var limit1 = Math.max(this.contentHeight - this.gridHeight,0);
 		if(this.position.y < 0) this.position.y = 0; else if(this.position.y > limit1) this.position.y = limit1;
 		if(oldx == this.position.x && oldy == this.position.y) return;
+		this.onScroll(this.position.x,this.position.y);
 		this.dirty = true;
 	}
 	,setGridSizeFromContainer: function() {
@@ -1094,11 +1096,6 @@ haxe__$Int64__$_$_$Int64.__name__ = true;
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
 };
-var haxe_Log = function() { };
-haxe_Log.__name__ = true;
-haxe_Log.trace = function(v,infos) {
-	js_Boot.__trace(v,infos);
-};
 var haxe_ds_StringMap = function() {
 	this.h = { };
 };
@@ -1209,25 +1206,6 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = true;
-js_Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-};
-js_Boot.__trace = function(v,i) {
-	var msg;
-	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
-	msg += js_Boot.__string_rec(v,"");
-	if(i != null && i.customParams != null) {
-		var _g = 0;
-		var _g1 = i.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			msg += "," + js_Boot.__string_rec(v1,"");
-		}
-	}
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
-};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;

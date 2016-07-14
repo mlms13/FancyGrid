@@ -56,19 +56,6 @@ class Grid {
     parent.append(fancyGrid);
     var view = Dom.create("div.view", []);
     fancyGrid.append(view);
-    // trace(options.vOffset(options.rows - 1) + options.vSize(options.rows - 1));
-    trace("top", (0...options.fixedTop).reduce(function(acc, row) {
-      return options.vSize(row) + acc;
-    }, 0.0));
-    trace("left", (0...options.fixedLeft).reduce(function(acc, col) {
-      return options.hSize(col) + acc;
-    }, 0.0));
-    trace("bottom", ((options.rows - options.fixedBottom).max(0)...options.rows).reduce(function(acc, row) {
-      return options.vSize(row) + acc;
-    }, 0.0));
-    trace("right", ((options.columns - options.fixedRight).max(0)...options.columns).reduce(function(acc, col) {
-      return options.hSize(col) + acc;
-    }, 0.0));
     var grid9 = new Grid9(view, {
       scrollerMinSize : 10.0,
       scrollerMaxSize : 100.0,
@@ -86,7 +73,10 @@ class Grid {
       }, 0.0),
       rightRail : ((options.columns - options.fixedRight).max(0)...options.columns).reduce(function(acc, col) {
         return options.hSize(col) + acc;
-      }, 0.0)
+      }, 0.0),
+      onScroll : function(x, y) {
+        renderMiddleLeft(y);
+      }
     });
 
     topLeft = grid9.topLeft;
@@ -126,8 +116,15 @@ class Grid {
     return cell;
   }
 
+  function renderMiddleLeft(v: Float) {
+
+  }
+
+  function searchRow(v: Float, r: Int): Int {
+
+  }
+
   function renderCorners() {
-    trace("renderCorners");
     var top = fixedTop.min(rows),
         bottom = (rows - fixedBottom).max(0),
         left = fixedLeft.min(columns),

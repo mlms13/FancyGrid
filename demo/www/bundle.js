@@ -418,7 +418,7 @@ var fancy_core_Grid9 = function(parent,options) {
 		return _1;
 	})();
 	if(t != null) this.scrollerMargin = t; else this.scrollerMargin = 0;
-	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
+	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left"),dots_Dom.create("div.cell.top.center"),dots_Dom.create("div.cell.top.right"),dots_Dom.create("div.cell.middle.left"),dots_Dom.create("div.cell.middle.center"),dots_Dom.create("div.cell.middle.right"),dots_Dom.create("div.cell.bottom.left"),dots_Dom.create("div.cell.bottom.center"),dots_Dom.create("div.cell.bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
 	this.scrollerH = dots_Query.find(".scroller-h",this.el);

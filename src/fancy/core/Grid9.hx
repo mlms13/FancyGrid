@@ -102,15 +102,15 @@ class Grid9 {
       Dom.create("div.row.bottom"),
       Dom.create("div.column.left"),
       Dom.create("div.column.right"),
-      Dom.create("div.cell.top.left", "top.left"),
-      Dom.create("div.cell.top.center", "top.center"),
-      Dom.create("div.cell.top.right", "top.right"),
-      Dom.create("div.cell.middle.left", "middle.left"),
-      Dom.create("div.cell.middle.center", "middle.center"),
-      Dom.create("div.cell.middle.right", "middle.right"),
-      Dom.create("div.cell.bottom.left", "bottom.left"),
-      Dom.create("div.cell.bottom.center", "bottom.center"),
-      Dom.create("div.cell.bottom.right", "bottom.right")
+      Dom.create("div.cell.top.left"),
+      Dom.create("div.cell.top.center"),
+      Dom.create("div.cell.top.right"),
+      Dom.create("div.cell.middle.left"),
+      Dom.create("div.cell.middle.center"),
+      Dom.create("div.cell.middle.right"),
+      Dom.create("div.cell.bottom.left"),
+      Dom.create("div.cell.bottom.center"),
+      Dom.create("div.cell.bottom.right")
     ]);
     parent.append(el);
 

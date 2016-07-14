@@ -325,15 +325,25 @@ dots_SelectorParser.prototype = {
 	}
 	,__class__: dots_SelectorParser
 };
-var fancy_ScrollPosition = function() {
-	this.x = 0;
-	this.y = 0;
+var fancy_View = function(parent) {
+	this.el = dots_Dom.create("div.view",null,[]);
+	dots_Dom.append(parent,this.el);
 };
-fancy_ScrollPosition.__name__ = true;
-fancy_ScrollPosition.prototype = {
-	__class__: fancy_ScrollPosition
+fancy_View.__name__ = true;
+fancy_View.prototype = {
+	__class__: fancy_View
 };
-var fancy_MoveHelper = function(el,callback) {
+var fancy_Grid = function(parent,options) {
+	var fancyGrid = dots_Dom.create("div.fancy-grid");
+	dots_Dom.append(parent,fancyGrid);
+	var view = new fancy_View(fancyGrid);
+	var grid9 = new fancy_core_Grid9(view.el,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0});
+};
+fancy_Grid.__name__ = true;
+fancy_Grid.prototype = {
+	__class__: fancy_Grid
+};
+var fancy_core_DragMoveHelper = function(el,callback) {
 	var _g = this;
 	this.el = el;
 	el.addEventListener("mousedown",function(e) {
@@ -361,60 +371,45 @@ var fancy_MoveHelper = function(el,callback) {
 		_g.moving = false;
 	});
 };
-fancy_MoveHelper.__name__ = true;
-fancy_MoveHelper.prototype = {
-	__class__: fancy_MoveHelper
+fancy_core_DragMoveHelper.__name__ = true;
+fancy_core_DragMoveHelper.prototype = {
+	__class__: fancy_core_DragMoveHelper
 };
-var fancy_SwipeHelper = function(el,callback) {
+var fancy_core_Grid9 = function(parent,options) {
 	var _g = this;
-	this.el = el;
-	el.addEventListener("touchmove",function(e) {
-		e.preventDefault();
-		_g.apply(e,function(t) {
-			var dx = t.clientX - _g.x;
-			var dy = t.clientY - _g.y;
-			_g.x = t.clientX;
-			_g.y = t.clientY;
-			callback(-dx,-dy);
-		});
-	});
-	el;
-	el.addEventListener("touchstart",function(e1) {
-		e1.preventDefault();
-		if(null != _g.id) return;
-		var t1 = e1.touches[0];
-		_g.id = t1.identifier;
-		_g.x = t1.clientX;
-		_g.y = t1.clientY;
-	});
-	el;
-	el.addEventListener("touchend",function(e2) {
-		e2.preventDefault();
-		if(e2.touches.length == 0) _g.id = null; else _g.apply(e2,function(_) {
-			_g.id = null;
-		});
-	});
-	el;
-};
-fancy_SwipeHelper.__name__ = true;
-fancy_SwipeHelper.prototype = {
-	apply: function(e,f) {
-		var _g = 0;
-		var _g1 = e.touches;
-		while(_g < _g1.length) {
-			var t = _g1[_g];
-			++_g;
-			if(t.identifier == this.id) {
-				f(t);
-				break;
-			}
-		}
-	}
-	,__class__: fancy_SwipeHelper
-};
-var fancy_Grid9 = function(parent,options) {
-	var _g = this;
-	this.position = new fancy_ScrollPosition();
+	if(null == options) options = { };
+	this.position = { x : 0.0, y : 0.0};
+	var offset = function() {
+		if(_g.contentWidth > _g.gridWidth && _g.contentHeight > _g.gridHeight) return _g.scrollerSize + _g.scrollerMargin; else return 0;
+	};
+	var viewHeight = function() {
+		return _g.gridHeight - _g.topHeight - _g.bottomHeight;
+	};
+	var contentHeight = function() {
+		return _g.contentHeight - _g.topHeight - _g.bottomHeight;
+	};
+	var viewWidth = function() {
+		return _g.gridWidth - _g.leftWidth - _g.rightWidth;
+	};
+	var contentWidth = function() {
+		return _g.contentWidth - _g.leftWidth - _g.rightWidth;
+	};
+	var minScrollerSize;
+	if(null != options.scrollerMinSize) {
+		var v = options.scrollerMinSize;
+		minScrollerSize = function() {
+			return v;
+		};
+	} else minScrollerSize = null;
+	var maxScrollerSize;
+	if(null != options.scrollerMaxSize) {
+		var v1 = options.scrollerMaxSize;
+		maxScrollerSize = function() {
+			return v1;
+		};
+	} else maxScrollerSize = null;
+	this.scrollerVDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewHeight, contentSize : contentHeight, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewHeight,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
+	this.scrollerHDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewWidth, contentSize : contentWidth, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewWidth,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	var t = (function() {
 		var _0 = options;
 		if(null == _0) return null;
@@ -431,22 +426,6 @@ var fancy_Grid9 = function(parent,options) {
 		return _11;
 	})();
 	if(t1 != null) this.scrollerMargin = t1; else this.scrollerMargin = 4;
-	var t2 = (function() {
-		var _02 = options;
-		if(null == _02) return null;
-		var _12 = _02.scrollerMinLength;
-		if(null == _12) return null;
-		return _12;
-	})();
-	if(t2 != null) this.scrollerMinLength = t2; else this.scrollerMinLength = 10;
-	var t3 = (function() {
-		var _03 = options;
-		if(null == _03) return null;
-		var _13 = _03.scrollerMaxLength;
-		if(null == _13) return null;
-		return _13;
-	})();
-	if(t3 != null) this.scrollerMaxLength = t3; else this.scrollerMaxLength = 100;
 	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.cell.top.left",null,null,"top.left"),dots_Dom.create("div.cell.top.center",null,null,"top.center"),dots_Dom.create("div.cell.top.right",null,null,"top.right"),dots_Dom.create("div.cell.middle.left",null,null,"middle.left"),dots_Dom.create("div.cell.middle.center",null,null,"middle.center"),dots_Dom.create("div.cell.middle.right",null,null,"middle.right"),dots_Dom.create("div.cell.bottom.left",null,null,"bottom.left"),dots_Dom.create("div.cell.bottom.center",null,null,"bottom.center"),dots_Dom.create("div.cell.bottom.right",null,null,"bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
@@ -462,8 +441,8 @@ var fancy_Grid9 = function(parent,options) {
 	this.middles = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.middle",this.el));
 	this.centers = dots_Dom.nodeListToArray(dots_Query.selectNodes(".cell.center",this.el));
 	this.setGridSizeFromContainer();
-	this.resizeContent(1000,2000);
-	this.sizeFixedElements(60,30,100,90);
+	this.resizeContent(1000,2200);
+	this.sizeFixedElements(100,100,100,100);
 	this.refresh();
 	window.addEventListener("resize",function(_) {
 		_g.setGridSizeFromContainer();
@@ -474,30 +453,56 @@ var fancy_Grid9 = function(parent,options) {
 		_g.movePosition(e.deltaX,e.deltaY);
 		_g.refresh();
 	});
-	new fancy_SwipeHelper(this.el,function(dx,dy) {
+	new fancy_core_SwipeMoveHelper(this.el,function(dx,dy) {
 		_g.movePosition(dx,dy);
 		_g.refresh();
 	});
-	new fancy_MoveHelper(this.scrollerH,function(dx1,_2) {
-		var offset;
-		if(_g.gridHeight / _g.contentHeight < 1 && _g.gridWidth / _g.contentWidth < 1) offset = _g.scrollerSize + _g.scrollerMargin; else offset = 0;
-		var span = _g.gridWidth - _g.leftWidth - _g.rightWidth - offset;
-		_g.movePosition(dx1 * _g.contentWidth / span,0);
+	new fancy_core_DragMoveHelper(this.scrollerH,function(dx1,_2) {
+		_g.movePosition((function($this) {
+			var $r;
+			var this1 = _g.scrollerHDimensions.scrollerToContentPosition(dx1);
+			$r = this1();
+			return $r;
+		}(this)),0);
 		_g.refresh();
 	});
-	new fancy_MoveHelper(this.scrollerV,function(_3,dy1) {
-		var vratio = Math.min(_g.gridHeight / _g.contentHeight,1);
-		var offset1;
-		if(vratio < 1 && _g.gridWidth / _g.contentWidth < 1) offset1 = _g.scrollerSize + _g.scrollerMargin; else offset1 = 0;
-		var span1 = _g.gridHeight - _g.topHeight - _g.bottomHeight - offset1;
-		haxe_Log.trace(dy1,{ fileName : "Grid.hx", lineNumber : 280, className : "fancy.Grid9", methodName : "new", customParams : [dy1 * _g.contentHeight / span1]});
-		_g.movePosition(0,dy1 * _g.contentHeight / span1);
+	new fancy_core_DragMoveHelper(this.scrollerV,function(_3,dy1) {
+		_g.movePosition(0,(function($this) {
+			var $r;
+			var this2 = _g.scrollerVDimensions.scrollerToContentPosition(dy1);
+			$r = this2();
+			return $r;
+		}(this)));
 		_g.refresh();
 	});
 };
-fancy_Grid9.__name__ = true;
-fancy_Grid9.prototype = {
-	resetPosition: function() {
+fancy_core_Grid9.__name__ = true;
+fancy_core_Grid9.prototype = {
+	refreshScrollers: function() {
+		if(!(this.contentHeight > this.gridHeight)) this.scrollerV.style.display = "none"; else {
+			this.scrollerV.style.display = "block";
+			var pos;
+			var this1 = this.scrollerVDimensions.contentToScrollerPosition(this.position.y);
+			pos = this1();
+			var size = this.scrollerVDimensions.scrollerSize();
+			this.scrollerV.style.top = "" + (this.topHeight + pos) + "px";
+			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerV.style.width = "" + this.scrollerSize + "px";
+			this.scrollerV.style.height = "" + size + "px";
+		}
+		if(!(this.contentWidth > this.gridWidth)) this.scrollerH.style.display = "none"; else {
+			this.scrollerH.style.display = "block";
+			var pos1;
+			var this2 = this.scrollerHDimensions.contentToScrollerPosition(this.position.x);
+			pos1 = this2();
+			var size1 = this.scrollerHDimensions.scrollerSize();
+			this.scrollerH.style.left = "" + (this.leftWidth + pos1) + "px";
+			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight - this.scrollerSize - this.scrollerMargin) + "px";
+			this.scrollerH.style.width = "" + size1 + "px";
+			this.scrollerH.style.height = "" + this.scrollerSize + "px";
+		}
+	}
+	,resetPosition: function() {
 		this.setPosition(this.position.x,this.position.y);
 	}
 	,movePosition: function(x,y) {
@@ -641,55 +646,131 @@ fancy_Grid9.prototype = {
 			return _5.style.width = "" + rightWidth + "px";
 		});
 	}
-	,refreshScrollers: function() {
-		var vratio = Math.min(this.gridHeight / this.contentHeight,1);
-		var hratio = Math.min(this.gridWidth / this.contentWidth,1);
-		var offset;
-		if(vratio < 1 && hratio < 1) offset = this.scrollerSize + this.scrollerMargin; else offset = 0;
-		var vspan = this.gridHeight - this.topHeight - this.bottomHeight - offset;
-		var hspan = this.gridWidth - this.leftWidth - this.rightWidth - offset;
-		if(vratio == 1) this.scrollerV.style.display = "none"; else {
-			this.scrollerV.style.display = "block";
-			var idealLen = vratio * vspan;
-			var len = Math.min(Math.max(this.scrollerMinLength,idealLen),this.scrollerMaxLength);
-			var absPos = this.position.y / (this.contentHeight - this.gridHeight);
-			var pos = absPos * (vspan - len);
-			this.scrollerV.style.top = "" + (this.topHeight + pos) + "px";
-			this.scrollerV.style.left = "" + (Math.min(this.gridWidth,this.contentWidth) - this.rightWidth - this.scrollerSize - this.scrollerMargin) + "px";
-			this.scrollerV.style.width = "" + this.scrollerSize + "px";
-			this.scrollerV.style.height = "" + len + "px";
-		}
-		if(hratio == 1) this.scrollerH.style.display = "none"; else {
-			this.scrollerH.style.display = "block";
-			var idealLen1 = hratio * hspan;
-			var len1 = Math.min(Math.max(this.scrollerMinLength,idealLen1),this.scrollerMaxLength);
-			var absPos1 = this.position.x / (this.contentWidth - this.gridWidth);
-			var pos1 = absPos1 * (hspan - len1);
-			this.scrollerH.style.left = "" + (this.leftWidth + pos1) + "px";
-			this.scrollerH.style.top = "" + (Math.min(this.gridHeight,this.contentHeight) - this.bottomHeight - this.scrollerSize - this.scrollerMargin) + "px";
-			this.scrollerH.style.width = "" + len1 + "px";
-			this.scrollerH.style.height = "" + this.scrollerSize + "px";
+	,__class__: fancy_core_Grid9
+};
+var fancy_core__$Lazy_Lazy_$Impl_$ = {};
+fancy_core__$Lazy_Lazy_$Impl_$.__name__ = true;
+fancy_core__$Lazy_Lazy_$Impl_$.map = function(this1,f) {
+	return function() {
+		return f(this1());
+	};
+};
+fancy_core__$Lazy_Lazy_$Impl_$.subtract = function(l1,l2) {
+	return function() {
+		return l1() - l2();
+	};
+};
+fancy_core__$Lazy_Lazy_$Impl_$.multiply = function(l1,l2) {
+	return function() {
+		return l1() * l2();
+	};
+};
+fancy_core__$Lazy_Lazy_$Impl_$.divideFromFloat = function(v1,l2) {
+	return function() {
+		return v1 / l2();
+	};
+};
+var fancy_core_LazyFloatExtensions = function() { };
+fancy_core_LazyFloatExtensions.__name__ = true;
+fancy_core_LazyFloatExtensions.min = function(l1,l2) {
+	return function() {
+		return Math.min(l1(),l2());
+	};
+};
+fancy_core_LazyFloatExtensions.max = function(l1,l2) {
+	return function() {
+		return Math.max(l1(),l2());
+	};
+};
+var fancy_core_ScrollerDimensions = function(opt) {
+	var _g = this;
+	this.viewSize = opt.viewSize;
+	this.contentSize = opt.contentSize;
+	this.scrollerArea = opt.scrollerArea;
+	var minScrollerSize;
+	if(null == opt.minScrollerSize) minScrollerSize = function() {
+		return 0.0;
+	}; else minScrollerSize = fancy_core_LazyFloatExtensions.max(opt.minScrollerSize,function() {
+		return 0.0;
+	});
+	var maxScrollerSize;
+	if(null == opt.maxScrollerSize) {
+		var v = Infinity;
+		maxScrollerSize = function() {
+			return v;
+		};
+	} else maxScrollerSize = fancy_core__$Lazy_Lazy_$Impl_$.map(opt.maxScrollerSize,function(v1) {
+		if(v1 < 0.0) {
+			return Infinity;
+		} else return v1;
+	});
+	this.proportionalScrollerSize = function() {
+		return _g.viewSize() / _g.contentSize() * _g.scrollerArea();
+	};
+	this.scrollerSize = fancy_core_LazyFloatExtensions.min(fancy_core_LazyFloatExtensions.max(this.proportionalScrollerSize,minScrollerSize),maxScrollerSize);
+};
+fancy_core_ScrollerDimensions.__name__ = true;
+fancy_core_ScrollerDimensions.prototype = {
+	scrollerPositionAsPercent: function(position) {
+		return fancy_core__$Lazy_Lazy_$Impl_$.divideFromFloat(position,fancy_core__$Lazy_Lazy_$Impl_$.subtract(this.scrollerArea,this.scrollerSize));
+	}
+	,contentPositionAsPercent: function(position) {
+		return fancy_core__$Lazy_Lazy_$Impl_$.divideFromFloat(position,fancy_core__$Lazy_Lazy_$Impl_$.subtract(this.contentSize,this.viewSize));
+	}
+	,scrollerToContentPosition: function(position) {
+		return fancy_core__$Lazy_Lazy_$Impl_$.multiply(this.scrollerPositionAsPercent(position),fancy_core__$Lazy_Lazy_$Impl_$.subtract(this.contentSize,this.viewSize));
+	}
+	,contentToScrollerPosition: function(position) {
+		return fancy_core__$Lazy_Lazy_$Impl_$.multiply(this.contentPositionAsPercent(position),fancy_core__$Lazy_Lazy_$Impl_$.subtract(this.scrollerArea,this.scrollerSize));
+	}
+	,__class__: fancy_core_ScrollerDimensions
+};
+var fancy_core_SwipeMoveHelper = function(el,callback) {
+	var _g = this;
+	this.el = el;
+	el.addEventListener("touchmove",function(e) {
+		e.preventDefault();
+		_g.apply(e,function(t) {
+			var dx = t.clientX - _g.x;
+			var dy = t.clientY - _g.y;
+			_g.x = t.clientX;
+			_g.y = t.clientY;
+			callback(-dx,-dy);
+		});
+	});
+	el;
+	el.addEventListener("touchstart",function(e1) {
+		e1.preventDefault();
+		if(null != _g.id) return;
+		var t1 = e1.touches[0];
+		_g.id = t1.identifier;
+		_g.x = t1.clientX;
+		_g.y = t1.clientY;
+	});
+	el;
+	el.addEventListener("touchend",function(e2) {
+		e2.preventDefault();
+		if(e2.touches.length == 0) _g.id = null; else _g.apply(e2,function(_) {
+			_g.id = null;
+		});
+	});
+	el;
+};
+fancy_core_SwipeMoveHelper.__name__ = true;
+fancy_core_SwipeMoveHelper.prototype = {
+	apply: function(e,f) {
+		var _g = 0;
+		var _g1 = e.touches;
+		while(_g < _g1.length) {
+			var t = _g1[_g];
+			++_g;
+			if(t.identifier == this.id) {
+				f(t);
+				break;
+			}
 		}
 	}
-	,__class__: fancy_Grid9
-};
-var fancy_View = function(parent) {
-	this.el = dots_Dom.create("div.view",null,[]);
-	dots_Dom.append(parent,this.el);
-};
-fancy_View.__name__ = true;
-fancy_View.prototype = {
-	__class__: fancy_View
-};
-var fancy_Grid = function(parent,options) {
-	var fancyGrid = dots_Dom.create("div.fancy-grid");
-	dots_Dom.append(parent,fancyGrid);
-	var view = new fancy_View(fancyGrid);
-	var grid9 = new fancy_Grid9(view.el);
-};
-fancy_Grid.__name__ = true;
-fancy_Grid.prototype = {
-	__class__: fancy_Grid
+	,__class__: fancy_core_SwipeMoveHelper
 };
 var haxe_StackItem = { __ename__ : true, __constructs__ : ["CFunction","Module","FilePos","Method","LocalFunction"] };
 haxe_StackItem.CFunction = ["CFunction",0];
@@ -822,11 +903,6 @@ haxe__$Int64__$_$_$Int64.__name__ = true;
 haxe__$Int64__$_$_$Int64.prototype = {
 	__class__: haxe__$Int64__$_$_$Int64
 };
-var haxe_Log = function() { };
-haxe_Log.__name__ = true;
-haxe_Log.trace = function(v,infos) {
-	js_Boot.__trace(v,infos);
-};
 var haxe_ds_StringMap = function() {
 	this.h = { };
 };
@@ -937,25 +1013,6 @@ js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
 });
 var js_Boot = function() { };
 js_Boot.__name__ = true;
-js_Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-};
-js_Boot.__trace = function(v,i) {
-	var msg;
-	if(i != null) msg = i.fileName + ":" + i.lineNumber + ": "; else msg = "";
-	msg += js_Boot.__string_rec(v,"");
-	if(i != null && i.customParams != null) {
-		var _g = 0;
-		var _g1 = i.customParams;
-		while(_g < _g1.length) {
-			var v1 = _g1[_g];
-			++_g;
-			msg += "," + js_Boot.__string_rec(v1,"");
-		}
-	}
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js_Boot.__unhtml(msg) + "<br/>"; else if(typeof console != "undefined" && console.log != null) console.log(msg);
-};
 js_Boot.getClass = function(o) {
 	if((o instanceof Array) && o.__enum__ == null) return Array; else {
 		var cl = o.__class__;

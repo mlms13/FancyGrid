@@ -8,9 +8,6 @@ abstract Lazy<T>(Void -> T) from Void -> T {
   inline function get_value(): T
     return this();
 
-  // @:to inline public function get(): T
-  //   return this();
-
   macro public static function of(e: haxe.macro.Expr) {
     var t = haxe.macro.Context.toComplexType(haxe.macro.Context.typeof(e));
     return macro (function() {

@@ -1,6 +1,7 @@
 -cp src
 -lib thx.core
 -lib dots
+-lib utest
 -dce full
 
 --each
@@ -12,3 +13,13 @@
 -D shallow-expose
 fancy.Grid
 -js dist/fancygrid.js
+
+--next
+-lib utest
+-js testbin/index.js
+-D phantomjs
+-dce no
+-cp test
+-main TestAll
+
+-cmd phantomjs testbin/phantom.js

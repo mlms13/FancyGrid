@@ -11,6 +11,13 @@ abstract Lazy<T>(Void -> T) from Void -> T {
   // @:to inline public function get(): T
   //   return this();
 
+  macro public static function of(e: haxe.macro.Expr) {
+    var t = haxe.macro.Context.toComplexType(haxe.macro.Context.typeof(e));
+    return macro (function() {
+      return $e;
+    } : Lazy<$t>);
+  }
+
   inline public static function ofValue<T>(v : T) : Lazy<T>
     return function() return v;
 

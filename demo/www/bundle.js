@@ -63,9 +63,9 @@ IntIterator.prototype = {
 var Main = function() { };
 Main.__name__ = true;
 Main.main = function() {
-	var cellWidth = 78;
-	var cellHeight = 12;
-	var rows = 200000;
+	var cellWidth = 65;
+	var cellHeight = 15;
+	var rows = 1000000;
 	var columns = 100000;
 	var grid = new fancy_Grid(dots_Query.find(".my-fancy-grid-container"),{ render : function(row,col) {
 		return dots_Dom.create("span.value",null,null,"" + row + ", " + col);
@@ -207,7 +207,7 @@ dots_Dom.append = function(el,child,children) {
 	return dots_Dom.appendChildren(el,children != null?children:[]);
 };
 dots_Dom.empty = function(el) {
-	while(el.firstChild != null) el.removeChild(el.firstChild);
+	el.innerHTML = "";
 	return el;
 };
 var dots_Query = function() { };
@@ -346,34 +346,47 @@ dots_SelectorParser.prototype = {
 	,__class__: dots_SelectorParser
 };
 var fancy_Grid = function(parent,options) {
+	this.cache = new haxe_ds_StringMap();
 	var _g = this;
 	var fancyGrid = dots_Dom.create("div.fancy-grid");
 	dots_Dom.append(parent,fancyGrid);
 	var view = dots_Dom.create("div.view",null,[]);
 	dots_Dom.append(fancyGrid,view);
-	var grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 10.0, scrollerMaxSize : 100.0, scrollerSize : 10, contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1), contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1), topRail : thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc,row) {
+	this.topRailSize = thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc,row) {
 		return options.vSize(row) + acc;
-	},0.0), leftRail : thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc1,col) {
+	},0.0);
+	this.leftRailSize = thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc1,col) {
 		return options.hSize(col) + acc1;
-	},0.0), bottomRail : thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc2,row1) {
+	},0.0);
+	this.bottomRailSize = thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc2,row1) {
 		return options.vSize(row1) + acc2;
-	},0.0), rightRail : thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc3,col1) {
+	},0.0);
+	this.rightRailSize = thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc3,col1) {
 		return options.hSize(col1) + acc3;
-	},0.0), onScroll : function(x,y) {
-		_g.renderMiddleLeft(y);
+	},0.0);
+	this.grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 20.0, scrollerMaxSize : 160.0, scrollerSize : 10, contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1), contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1), topRail : this.topRailSize, leftRail : this.leftRailSize, bottomRail : this.bottomRailSize, rightRail : this.rightRailSize, onScroll : function(x,y,ox,oy) {
+		if(oy != y) _g.renderMiddle(y);
+		if(ox != x) _g.renderCenter(x);
+		_g.renderMain(x,y);
+	}, onResize : function(w,h,ow,oh) {
+		if(oh != h) _g.renderMiddle(_g.grid9.position.y);
+		if(ow != w) _g.renderCenter(_g.grid9.position.x);
+		_g.renderMain(_g.grid9.position.x,_g.grid9.position.y);
 	}});
-	this.topLeft = grid9.topLeft;
-	this.topCenter = grid9.topCenter;
-	this.topRight = grid9.topRight;
-	this.middleLeft = grid9.middleLeft;
-	this.middleCenter = grid9.middleCenter;
-	this.middleRight = grid9.middleRight;
-	this.bottomLeft = grid9.bottomLeft;
-	this.bottomCenter = grid9.bottomCenter;
-	this.bottomRight = grid9.bottomRight;
+	this.topLeft = this.grid9.topLeft;
+	this.topCenter = this.grid9.topCenter;
+	this.topRight = this.grid9.topRight;
+	this.middleLeft = this.grid9.middleLeft;
+	this.middleCenter = this.grid9.middleCenter;
+	this.middleRight = this.grid9.middleRight;
+	this.bottomLeft = this.grid9.bottomLeft;
+	this.bottomCenter = this.grid9.bottomCenter;
+	this.bottomRight = this.grid9.bottomRight;
 	this.render = options.render;
 	this.vOffset = options.vOffset;
 	this.hOffset = options.hOffset;
+	this.vSize = options.vSize;
+	this.hSize = options.hSize;
 	this.rows = options.rows;
 	this.columns = options.columns;
 	var t = (function() {
@@ -409,20 +422,130 @@ var fancy_Grid = function(parent,options) {
 	})();
 	if(t3 != null) this.fixedBottom = t3; else this.fixedBottom = 0;
 	this.renderCorners();
+	this.renderMiddle(0);
+	this.renderCenter(0);
+	this.renderMain(0,0);
 };
 fancy_Grid.__name__ = true;
 fancy_Grid.prototype = {
 	renderTo: function(parent,row,col) {
-		var el = this.renderCell(row,col);
+		var k = "" + row + "-" + col;
+		var el = this.cache.get(k);
+		if(null == el) {
+			el = this.renderCell(row,col);
+			this.cache.set(k,el);
+		}
 		dots_Dom.append(parent,el);
 	}
 	,renderCell: function(row,col) {
 		var cell = dots_Dom.create("div.cell.row-" + row + ".col-" + col,null,[this.render(row,col)]);
 		cell.style.top = "" + this.vOffset(row) + "px";
 		cell.style.left = "" + this.hOffset(col) + "px";
+		cell.style.width = "" + this.hSize(row) + "px";
+		cell.style.height = "" + this.vSize(col) + "px";
 		return cell;
 	}
-	,renderMiddleLeft: function(v) {
+	,renderMiddle: function(v) {
+		var r = fancy_core_Search.binary(0,this.rows,this.rowComparator(v)) + this.fixedTop;
+		var top = this.vOffset(r);
+		var limit = top + this.grid9.get_gridMiddleHeight();
+		dots_Dom.empty(this.grid9.middleLeft);
+		dots_Dom.empty(this.grid9.middleRight);
+		var leftAnchor = dots_Dom.create("div.anchor.middle.left");
+		var rightAnchor = dots_Dom.create("div.anchor.middle.right");
+		var leftCols = thx_Ints.min(this.fixedLeft,this.columns);
+		var rightCols = thx_Ints.min(this.columns - this.fixedRight,this.columns);
+		leftAnchor.style.top = "" + -this.topRailSize + "px";
+		rightAnchor.style.top = "" + -this.topRailSize + "px";
+		rightAnchor.style.left = "" + -this.hOffset(rightCols) + "px";
+		dots_Dom.append(this.grid9.middleLeft,leftAnchor);
+		dots_Dom.append(this.grid9.middleRight,rightAnchor);
+		while(top < limit + this.vSize(r)) {
+			var _g = 0;
+			while(_g < leftCols) {
+				var c = _g++;
+				this.renderTo(leftAnchor,r,c);
+			}
+			var _g1 = rightCols;
+			var _g2 = this.columns;
+			while(_g1 < _g2) {
+				var c1 = _g1++;
+				this.renderTo(rightAnchor,r,c1);
+			}
+			top += this.vSize(r++);
+		}
+	}
+	,renderCenter: function(v) {
+		var c = fancy_core_Search.binary(0,this.columns,this.columnComparator(v)) + this.fixedLeft;
+		var left = this.hOffset(c);
+		var limit = left + this.grid9.get_gridCenterWidth();
+		dots_Dom.empty(this.grid9.topCenter);
+		dots_Dom.empty(this.grid9.bottomCenter);
+		var topAnchor = dots_Dom.create("div.anchor.top.center");
+		var bottomAnchor = dots_Dom.create("div.anchor.bottom.center");
+		var topRows = thx_Ints.min(this.fixedTop,this.rows);
+		var bottomRows = thx_Ints.min(this.rows - this.fixedBottom,this.rows);
+		topAnchor.style.left = "" + -this.leftRailSize + "px";
+		bottomAnchor.style.top = "" + -this.vOffset(bottomRows) + "px";
+		bottomAnchor.style.left = "" + -this.leftRailSize + "px";
+		dots_Dom.append(this.grid9.topCenter,topAnchor);
+		dots_Dom.append(this.grid9.bottomCenter,bottomAnchor);
+		while(left < limit + this.hSize(c)) {
+			var _g = 0;
+			while(_g < topRows) {
+				var r = _g++;
+				this.renderTo(topAnchor,r,c);
+			}
+			var _g1 = bottomRows;
+			var _g2 = this.rows;
+			while(_g1 < _g2) {
+				var r1 = _g1++;
+				this.renderTo(bottomAnchor,r1,c);
+			}
+			left += this.hSize(c++);
+		}
+	}
+	,renderMain: function(x,y) {
+		var r = fancy_core_Search.binary(0,this.rows,this.rowComparator(y)) + this.fixedTop;
+		var c = fancy_core_Search.binary(0,this.columns,this.columnComparator(x)) + this.fixedLeft;
+		var left = this.hOffset(c);
+		var top = this.vOffset(r);
+		var hlimit = left + this.grid9.get_gridCenterWidth();
+		var vlimit = top + this.grid9.get_gridMiddleHeight();
+		dots_Dom.empty(this.grid9.middleCenter);
+		var anchor = dots_Dom.create("div.anchor.middle.center");
+		anchor.style.top = "-" + this.topRailSize + "px";
+		anchor.style.left = "-" + this.leftRailSize + "px";
+		dots_Dom.append(this.grid9.middleCenter,anchor);
+		while(r < this.rows - this.fixedBottom && top < vlimit + this.vSize(r)) {
+			var tleft = left;
+			var tc = c;
+			while(tc < this.columns - this.fixedRight && tleft < hlimit + this.hSize(tc)) {
+				this.renderTo(anchor,r,tc);
+				tleft += this.hSize(tc++);
+			}
+			top += this.vSize(r++);
+		}
+	}
+	,rowComparator: function(v) {
+		var _g = this;
+		return function(r) {
+			var tv = _g.vOffset(r);
+			if(tv > v) return 1;
+			var th = _g.vSize(r);
+			if(tv + th >= v) return 0;
+			return -1;
+		};
+	}
+	,columnComparator: function(v) {
+		var _g = this;
+		return function(r) {
+			var tv = _g.hOffset(r);
+			if(tv > v) return 1;
+			var th = _g.hSize(r);
+			if(tv + th >= v) return 0;
+			return -1;
+		};
 	}
 	,renderCorners: function() {
 		var top = thx_Ints.min(this.fixedTop,this.rows);
@@ -523,20 +646,25 @@ var fancy_core_Grid9 = function(parent,options) {
 		if(null == _1) return null;
 		return _1;
 	})();
-	if(t != null) this.onScroll = t; else this.onScroll = function(x,y) {
+	if(t != null) this.onScroll = t; else this.onScroll = function(x,y,ox,oy) {
+	};
+	var t1 = (function() {
+		var _01 = options;
+		if(null == _01) return null;
+		var _11 = _01.onResize;
+		if(null == _11) return null;
+		return _11;
+	})();
+	if(t1 != null) this.onResize = t1; else this.onResize = function(w,h,ow,oh) {
 	};
 	var offset = function() {
 		if(_g.contentWidth > _g.gridWidth && _g.contentHeight > _g.gridHeight) return _g.scrollerSize + _g.scrollerMargin; else return 0;
 	};
-	var viewHeight = function() {
-		return _g.gridHeight - _g.topRail - _g.bottomRail;
-	};
+	var viewHeight = $bind(this,this.get_gridMiddleHeight);
 	var contentHeight = function() {
 		return _g.contentHeight - _g.topRail - _g.bottomRail;
 	};
-	var viewWidth = function() {
-		return _g.gridWidth - _g.leftRail - _g.rightRail;
-	};
+	var viewWidth = $bind(this,this.get_gridCenterWidth);
 	var contentWidth = function() {
 		return _g.contentWidth - _g.leftRail - _g.rightRail;
 	};
@@ -557,14 +685,14 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.scrollerVDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewHeight, contentSize : contentHeight, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewHeight,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	this.scrollerHDimensions = new fancy_core_ScrollerDimensions({ viewSize : viewWidth, contentSize : contentWidth, scrollerArea : fancy_core__$Lazy_Lazy_$Impl_$.subtract(viewWidth,offset), minScrollerSize : minScrollerSize, maxScrollerSize : maxScrollerSize});
 	this.scrollerSize = options.scrollerSize;
-	var t1 = (function() {
-		var _01 = options;
-		if(null == _01) return null;
-		var _11 = _01.scrollerMargin;
-		if(null == _11) return null;
-		return _11;
+	var t2 = (function() {
+		var _02 = options;
+		if(null == _02) return null;
+		var _12 = _02.scrollerMargin;
+		if(null == _12) return null;
+		return _12;
 	})();
-	if(t1 != null) this.scrollerMargin = t1; else this.scrollerMargin = 0;
+	if(t2 != null) this.scrollerMargin = t2; else this.scrollerMargin = 0;
 	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.pane.top.left"),dots_Dom.create("div.pane.top.center"),dots_Dom.create("div.pane.top.right"),dots_Dom.create("div.pane.middle.left"),dots_Dom.create("div.pane.middle.center"),dots_Dom.create("div.pane.middle.right"),dots_Dom.create("div.pane.bottom.left"),dots_Dom.create("div.pane.bottom.center"),dots_Dom.create("div.pane.bottom.right")]);
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
@@ -588,25 +716,15 @@ var fancy_core_Grid9 = function(parent,options) {
 	this.bottomLeft = dots_Query.find(".pane.bottom.left",this.el);
 	this.bottomCenter = dots_Query.find(".pane.bottom.center",this.el);
 	this.bottomRight = dots_Query.find(".pane.bottom.right",this.el);
-	this.setGridSizeFromContainer();
+	this.size = this.getGridSizeFromContainer();
+	this.resizeGrid(this.size.w,this.size.h);
 	this.resizeContent(options.contentWidth,options.contentHeight);
 	this.sizeRails((function($this) {
-		var $r;
-		var t2 = (function() {
-			var _02 = options;
-			if(null == _02) return null;
-			var _12 = _02.topRail;
-			if(null == _12) return null;
-			return _12;
-		})();
-		$r = t2 != null?t2:0;
-		return $r;
-	}(this)),(function($this) {
 		var $r;
 		var t3 = (function() {
 			var _03 = options;
 			if(null == _03) return null;
-			var _13 = _03.bottomRail;
+			var _13 = _03.topRail;
 			if(null == _13) return null;
 			return _13;
 		})();
@@ -617,7 +735,7 @@ var fancy_core_Grid9 = function(parent,options) {
 		var t4 = (function() {
 			var _04 = options;
 			if(null == _04) return null;
-			var _14 = _04.leftRail;
+			var _14 = _04.bottomRail;
 			if(null == _14) return null;
 			return _14;
 		})();
@@ -628,18 +746,33 @@ var fancy_core_Grid9 = function(parent,options) {
 		var t5 = (function() {
 			var _05 = options;
 			if(null == _05) return null;
-			var _15 = _05.rightRail;
+			var _15 = _05.leftRail;
 			if(null == _15) return null;
 			return _15;
 		})();
 		$r = t5 != null?t5:0;
 		return $r;
+	}(this)),(function($this) {
+		var $r;
+		var t6 = (function() {
+			var _06 = options;
+			if(null == _06) return null;
+			var _16 = _06.rightRail;
+			if(null == _16) return null;
+			return _16;
+		})();
+		$r = t6 != null?t6:0;
+		return $r;
 	}(this)));
 	this.refresh();
 	window.addEventListener("resize",function(_) {
-		_g.setGridSizeFromContainer();
+		var s = _g.getGridSizeFromContainer();
+		_g.resizeGrid(s.w,s.h);
 		_g.resetPosition();
 		_g.refresh();
+		var osize = _g.size;
+		_g.size = s;
+		if(_g.size.w != osize.w || _g.size.h != osize.h) _g.onResize(_g.size.w,_g.size.h,osize.w,osize.h);
 	});
 	dots_Dom.on(this.el,"wheel",function(e) {
 		_g.movePosition(e.deltaX,e.deltaY);
@@ -710,13 +843,11 @@ fancy_core_Grid9.prototype = {
 		var limit1 = Math.max(this.contentHeight - this.gridHeight,0);
 		if(this.position.y < 0) this.position.y = 0; else if(this.position.y > limit1) this.position.y = limit1;
 		if(oldx == this.position.x && oldy == this.position.y) return;
-		this.onScroll(this.position.x,this.position.y);
+		this.onScroll(this.position.x,this.position.y,oldx,oldy);
 		this.dirty = true;
 	}
-	,setGridSizeFromContainer: function() {
-		var w = this.el.parentElement.offsetWidth;
-		var h = this.el.parentElement.offsetHeight;
-		this.resizeGrid(w,h);
+	,getGridSizeFromContainer: function() {
+		return { w : this.el.parentElement.offsetWidth, h : this.el.parentElement.offsetHeight};
 	}
 	,refresh: function() {
 		var _g = this;
@@ -839,6 +970,12 @@ fancy_core_Grid9.prototype = {
 			return _5.style.width = "" + rightRail + "px";
 		});
 	}
+	,get_gridMiddleHeight: function() {
+		return this.gridHeight - this.topRail - this.bottomRail;
+	}
+	,get_gridCenterWidth: function() {
+		return this.gridWidth - this.leftRail - this.rightRail;
+	}
 	,__class__: fancy_core_Grid9
 };
 var fancy_core__$Lazy_Lazy_$Impl_$ = {};
@@ -917,6 +1054,32 @@ fancy_core_ScrollerDimensions.prototype = {
 		return fancy_core__$Lazy_Lazy_$Impl_$.multiply(this.contentPositionAsPercent(position),fancy_core__$Lazy_Lazy_$Impl_$.subtract(this.scrollerArea,this.scrollerSize));
 	}
 	,__class__: fancy_core_ScrollerDimensions
+};
+var fancy_core_Search = function() { };
+fancy_core_Search.__name__ = true;
+fancy_core_Search.binary = function(min,max,comparator) {
+	if(min > max) {
+		var temp = max;
+		max = min;
+		min = temp;
+	}
+	var mid = function(l,r) {
+		return (l + r) / 2 | 0;
+	};
+	var search;
+	var search1 = null;
+	search1 = function(m,l1,r1) {
+		var c = comparator(m);
+		if(c < 0) {
+			l1 = m + 1;
+			return search1(mid(l1,r1),l1,r1);
+		} else if(c > 0) {
+			r1 = m - 1;
+			return search1(mid(l1,r1),l1,r1);
+		} else return m;
+	};
+	search = search1;
+	return search(mid(min,max),min,max);
 };
 var fancy_core_SwipeMoveHelper = function(el,callback) {
 	var _g = this;
@@ -1644,6 +1807,8 @@ thx__$ReadonlyArray_ReadonlyArray_$Impl_$.indexOf = function(this1,el,eq) {
 	}
 	return -1;
 };
+var $_, $fid = 0;
+function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 String.prototype.__class__ = String;
 String.__name__ = true;
 Array.__name__ = true;

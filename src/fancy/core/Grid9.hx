@@ -12,7 +12,8 @@ typedef Grid9Options = {
   contentWidth: Float,
   contentHeight: Float,
   scrollerSize: Float,
-  ?onScroll: Float -> Float -> Void,
+  ?onScroll: Float -> Float -> Float -> Float -> Void,
+  ?onResize: Float -> Float -> Float -> Float -> Void,
   ?scrollerMargin: Float,
   ?scrollerMinSize: Float,
   ?scrollerMaxSize: Float,
@@ -50,6 +51,11 @@ class Grid9 {
     y: Float
   };
 
+  public var size: {
+    w: Float,
+    h: Float
+  };
+
   var top: Element;
   var tops: Array<Element>;
   var bottom: Element;
@@ -69,15 +75,20 @@ class Grid9 {
   var scrollerVDimensions: ScrollerDimensions;
   var scrollerHDimensions: ScrollerDimensions;
 
-  var onScroll: Float -> Float -> Void;
+  var onScroll: Float -> Float -> Float -> Float -> Void;
+  var onResize: Float -> Float -> Float -> Float -> Void;
+
+  public var gridMiddleHeight(get, null): Float;
+  public var gridCenterWidth(get, null): Float;
 
   public function new(parent: Element, options: Grid9Options) {
     position = { x: 0.0, y: 0.0 };
-    onScroll = options.onScroll.or(function(x, y) {});
+    onScroll = options.onScroll.or(function(x, y, ox, oy) {});
+    onResize = options.onResize.or(function(w, h, ow, oh) {});
     var offset = Lazy.of(willDisplayBothScrollbar() ? scrollerSize + scrollerMargin : 0),
-        viewHeight = Lazy.of(gridHeight - topRail - bottomRail),
+        viewHeight = get_gridMiddleHeight,
         contentHeight = Lazy.of(contentHeight - topRail - bottomRail),
-        viewWidth = Lazy.of(gridWidth - leftRail - rightRail),
+        viewWidth = get_gridCenterWidth,
         contentWidth = Lazy.of(contentWidth - leftRail - rightRail),
         minScrollerSize = null != options.scrollerMinSize ? Lazy.ofValue(options.scrollerMinSize) : null,
         maxScrollerSize = null != options.scrollerMaxSize ? Lazy.ofValue(options.scrollerMaxSize) : null;
@@ -143,7 +154,9 @@ class Grid9 {
     bottomRight  = Query.find(".pane.bottom.right", el);
 
     // RESIZE
-    setGridSizeFromContainer();
+    size = getGridSizeFromContainer();
+    resizeGrid(size.w, size.h);
+
     resizeContent(options.contentWidth, options.contentHeight);
     sizeRails(
       options.topRail.or(0),
@@ -156,9 +169,14 @@ class Grid9 {
     // EVENTS
     // TODO make wiring optional
     js.Browser.window.addEventListener("resize", function(_) {
-      setGridSizeFromContainer();
+      var s = getGridSizeFromContainer();
+      resizeGrid(s.w, s.h);
       resetPosition();
       refresh();
+      var osize = size;
+      size = s;
+      if(size.w != osize.w || size.h != osize.h)
+        onResize(size.w, size.h, osize.w, osize.h);
     });
     el.on("wheel", function(e: js.html.WheelEvent) {
       movePosition(e.deltaX, e.deltaY);
@@ -240,14 +258,15 @@ class Grid9 {
     }
 
     if(oldx == position.x && oldy == position.y) return;
-    onScroll(position.x, position.y);
+    onScroll(position.x, position.y, oldx, oldy);
     dirty = true;
   }
 
-  function setGridSizeFromContainer() {
-    var w = Dom.getOuterWidth(el.parentElement),
-        h = Dom.getOuterHeight(el.parentElement);
-    resizeGrid(w, h);
+  function getGridSizeFromContainer() : { w: Float, h: Float } {
+    return {
+      w : Dom.getOuterWidth(el.parentElement),
+      h : Dom.getOuterHeight(el.parentElement)
+    };
   }
 
   public function refresh() {
@@ -310,4 +329,9 @@ class Grid9 {
     right.style.width = '${rightRail}px';
     rights.each.fn(_.style.width = '${rightRail}px');
   }
+
+  function get_gridMiddleHeight()
+    return gridHeight - topRail - bottomRail;
+  function get_gridCenterWidth()
+    return gridWidth - leftRail - rightRail;
 }

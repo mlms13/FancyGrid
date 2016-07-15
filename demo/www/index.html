@@ -11,7 +11,7 @@ body {
 }
 
 .my-fancy-grid-container {
-  height: calc(100vh - 100px);
+  height: calc(100vh - 10px);
   width: 100%;
 }
 
@@ -40,7 +40,7 @@ body {
 
 /* STRUCTURAL  */
 .fancy-grid, .fancy-grid * {
-  box-sizing: content-box;
+  box-sizing: border-box;
 }
 
 .fancy-grid, .fancy-grid .view {
@@ -87,17 +87,17 @@ body {
 .fancy-grid .grid9 .pane.top.center { z-index: 7; }
 
 .fancy-grid .grid9 .scroller {
-  background-color: rgba(0,0,0,0.1);
+  background-color: rgba(0,0,0,0.2);
   position: absolute;
   z-index: 20;
 }
 
 .fancy-grid .grid9 .scroller:hover {
-  background-color: rgba(0,0,0,0.2);
+  background-color: rgba(0,0,0,0.4);
 }
 
 .fancy-grid .grid9 .scroller.dragging {
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0,0,0,0.6);
 }
 
 .fancy-grid .cell {
@@ -106,7 +106,7 @@ body {
 
 /* DEBUG */
 .fancy-grid .view {
-  border: 1px solid red;
+  border: 1px solid #969696;
   overflow: hidden;
 }
 
@@ -140,15 +140,21 @@ body {
 }
 
 .fancy-grid .cell {
-  background-color: #f0f0f0;
-  border-left: 1px solid #ddd;
-  border-top: 1px solid #ddd;
-  border-right: 1px solid #fff;
-  border-bottom: 1px solid #fff;
-  width: 76px;
-  height: 10px;
-  font-family: Menlo;
-  font-size: 9px;
+  position: absolute;
+  overflow: hidden;
+}
+
+.fancy-grid .cell .value {
+  background-color: #ffffff;
+  border-right: 1px solid #cecece;
+  border-bottom: 1px solid #cecece;
+  font-family: Verdana;
+  font-size: 7pt;
+  padding: 2px 6px;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 /*
 .fancy-grid .grid9 .pane.top.left {

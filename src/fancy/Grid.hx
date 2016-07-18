@@ -59,29 +59,40 @@ class Grid {
   var bottomRailSize: Float;
   var rightRailSize: Float;
 
+  var cacheElement: Map<String, Element> = new Map();
+
   public function new(parent : Element, options : GridOptions) {
+    render = options.render;
+    vOffset = options.vOffset;
+    hOffset = options.hOffset;
+    vSize = options.vSize;
+    hSize = options.hSize;
+    rows = options.rows;
+    columns = options.columns;
+
+    fixedLeft = options.fixedLeft.or(0);
+    fixedRight = options.fixedRight.or(0);
+    fixedTop = options.fixedTop.or(0);
+    fixedBottom = options.fixedBottom.or(0);
+
+    var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
+    var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
+
     var fancyGrid = Dom.create("div.fancy-grid");
     parent.append(fancyGrid);
     var view = Dom.create("div.view", []);
     fancyGrid.append(view);
-    topRailSize = (0...options.fixedTop).reduce(function(acc, row) {
-      return options.vSize(row) + acc;
-    }, 0.0);
-    leftRailSize = (0...options.fixedLeft).reduce(function(acc, col) {
-      return options.hSize(col) + acc;
-    }, 0.0);
-    bottomRailSize = ((options.rows - options.fixedBottom).max(0)...options.rows).reduce(function(acc, row) {
-      return options.vSize(row) + acc;
-    }, 0.0);
-    rightRailSize = ((options.columns - options.fixedRight).max(0)...options.columns).reduce(function(acc, col) {
-      return options.hSize(col) + acc;
-    }, 0.0);
+    topRailSize = vOffset(fixedTop);
+    leftRailSize = hOffset(fixedLeft);
+    bottomRailSize = fixedBottom == 0 ? 0 : contentHeight - vOffset(rows - fixedBottom);
+    rightRailSize = fixedRight == 0 ? 0 : contentWidth - hOffset(columns - fixedRight);
+
     grid9 = new Grid9(view, {
       scrollerMinSize : 20.0,
       scrollerMaxSize : 160.0,
       scrollerSize : 10,
-      contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1),
-      contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1),
+      contentWidth : contentWidth,
+      contentHeight : contentHeight,
       topRail : topRailSize,
       leftRail : leftRailSize,
       bottomRail : bottomRailSize,
@@ -112,34 +123,18 @@ class Grid {
     bottomCenter = grid9.bottomCenter;
     bottomRight = grid9.bottomRight;
 
-    render = options.render;
-    vOffset = options.vOffset;
-    hOffset = options.hOffset;
-    vSize = options.vSize;
-    hSize = options.hSize;
-
-    rows = options.rows;
-    columns = options.columns;
-
-    fixedLeft = options.fixedLeft.or(0);
-    fixedRight = options.fixedRight.or(0);
-    fixedTop = options.fixedTop.or(0);
-    fixedBottom = options.fixedBottom.or(0);
-
     renderCorners();
     renderMiddle(0);
     renderCenter(0);
     renderMain(0, 0);
   }
 
-
-  var cache: Map<String, Element> = new Map();
   function renderTo(parent: Element, row: Int, col: Int) {
     var k = '$row-$col';
-    var el = cache.get(k);
+    var el = cacheElement.get(k);
     if(null == el) {
       el = renderCell(row, col);
-      cache.set(k, el);
+      cacheElement.set(k, el);
     }
     parent.append(el);
   }
@@ -170,7 +165,7 @@ class Grid {
 
     grid9.middleLeft.append(leftAnchor);
     grid9.middleRight.append(rightAnchor);
-    while(top < limit + (vSize(r))) {
+    while(top < limit + vSize(r) && r < rows - fixedBottom) {
       for(c in 0...leftCols) {
         renderTo(leftAnchor, r, c);
       }
@@ -198,7 +193,7 @@ class Grid {
 
     grid9.topCenter.append(topAnchor);
     grid9.bottomCenter.append(bottomAnchor);
-    while(left < limit + (hSize(c))) {
+    while(left < limit + hSize(c) && c < columns - fixedRight) {
       for(r in 0...topRows) {
         renderTo(topAnchor, r, c);
       }
@@ -217,7 +212,6 @@ class Grid {
     var top = vOffset(r);
     var hlimit = left + grid9.gridCenterWidth;
     var vlimit = top + grid9.gridMiddleHeight;
-
 
     grid9.middleCenter.empty();
 

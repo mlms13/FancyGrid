@@ -46,20 +46,6 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 };
-var IntIterator = function(min,max) {
-	this.min = min;
-	this.max = max;
-};
-IntIterator.__name__ = true;
-IntIterator.prototype = {
-	hasNext: function() {
-		return this.min < this.max;
-	}
-	,next: function() {
-		return this.min++;
-	}
-	,__class__: IntIterator
-};
 var Main = function() { };
 Main.__name__ = true;
 Main.main = function() {
@@ -346,42 +332,8 @@ dots_SelectorParser.prototype = {
 	,__class__: dots_SelectorParser
 };
 var fancy_Grid = function(parent,options) {
-	this.cache = new haxe_ds_StringMap();
+	this.cacheElement = new haxe_ds_StringMap();
 	var _g = this;
-	var fancyGrid = dots_Dom.create("div.fancy-grid");
-	dots_Dom.append(parent,fancyGrid);
-	var view = dots_Dom.create("div.view",null,[]);
-	dots_Dom.append(fancyGrid,view);
-	this.topRailSize = thx_Iterators.reduce(new IntIterator(0,options.fixedTop),function(acc,row) {
-		return options.vSize(row) + acc;
-	},0.0);
-	this.leftRailSize = thx_Iterators.reduce(new IntIterator(0,options.fixedLeft),function(acc1,col) {
-		return options.hSize(col) + acc1;
-	},0.0);
-	this.bottomRailSize = thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.rows - options.fixedBottom,0),options.rows),function(acc2,row1) {
-		return options.vSize(row1) + acc2;
-	},0.0);
-	this.rightRailSize = thx_Iterators.reduce(new IntIterator(thx_Ints.max(options.columns - options.fixedRight,0),options.columns),function(acc3,col1) {
-		return options.hSize(col1) + acc3;
-	},0.0);
-	this.grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 20.0, scrollerMaxSize : 160.0, scrollerSize : 10, contentWidth : options.hOffset(options.columns - 1) + options.hSize(options.columns - 1), contentHeight : options.vOffset(options.rows - 1) + options.vSize(options.rows - 1), topRail : this.topRailSize, leftRail : this.leftRailSize, bottomRail : this.bottomRailSize, rightRail : this.rightRailSize, onScroll : function(x,y,ox,oy) {
-		if(oy != y) _g.renderMiddle(y);
-		if(ox != x) _g.renderCenter(x);
-		_g.renderMain(x,y);
-	}, onResize : function(w,h,ow,oh) {
-		if(oh != h) _g.renderMiddle(_g.grid9.position.y);
-		if(ow != w) _g.renderCenter(_g.grid9.position.x);
-		_g.renderMain(_g.grid9.position.x,_g.grid9.position.y);
-	}});
-	this.topLeft = this.grid9.topLeft;
-	this.topCenter = this.grid9.topCenter;
-	this.topRight = this.grid9.topRight;
-	this.middleLeft = this.grid9.middleLeft;
-	this.middleCenter = this.grid9.middleCenter;
-	this.middleRight = this.grid9.middleRight;
-	this.bottomLeft = this.grid9.bottomLeft;
-	this.bottomCenter = this.grid9.bottomCenter;
-	this.bottomRight = this.grid9.bottomRight;
 	this.render = options.render;
 	this.vOffset = options.vOffset;
 	this.hOffset = options.hOffset;
@@ -421,6 +373,34 @@ var fancy_Grid = function(parent,options) {
 		return _13;
 	})();
 	if(t3 != null) this.fixedBottom = t3; else this.fixedBottom = 0;
+	var contentWidth = this.hOffset(this.columns - 1) + this.hSize(this.columns - 1);
+	var contentHeight = this.vOffset(this.rows - 1) + this.vSize(this.rows - 1);
+	var fancyGrid = dots_Dom.create("div.fancy-grid");
+	dots_Dom.append(parent,fancyGrid);
+	var view = dots_Dom.create("div.view",null,[]);
+	dots_Dom.append(fancyGrid,view);
+	this.topRailSize = this.vOffset(this.fixedTop);
+	this.leftRailSize = this.hOffset(this.fixedLeft);
+	if(this.fixedBottom == 0) this.bottomRailSize = 0; else this.bottomRailSize = contentHeight - this.vOffset(this.rows - this.fixedBottom);
+	if(this.fixedRight == 0) this.rightRailSize = 0; else this.rightRailSize = contentWidth - this.hOffset(this.columns - this.fixedRight);
+	this.grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 20.0, scrollerMaxSize : 160.0, scrollerSize : 10, contentWidth : contentWidth, contentHeight : contentHeight, topRail : this.topRailSize, leftRail : this.leftRailSize, bottomRail : this.bottomRailSize, rightRail : this.rightRailSize, onScroll : function(x,y,ox,oy) {
+		if(oy != y) _g.renderMiddle(y);
+		if(ox != x) _g.renderCenter(x);
+		_g.renderMain(x,y);
+	}, onResize : function(w,h,ow,oh) {
+		if(oh != h) _g.renderMiddle(_g.grid9.position.y);
+		if(ow != w) _g.renderCenter(_g.grid9.position.x);
+		_g.renderMain(_g.grid9.position.x,_g.grid9.position.y);
+	}});
+	this.topLeft = this.grid9.topLeft;
+	this.topCenter = this.grid9.topCenter;
+	this.topRight = this.grid9.topRight;
+	this.middleLeft = this.grid9.middleLeft;
+	this.middleCenter = this.grid9.middleCenter;
+	this.middleRight = this.grid9.middleRight;
+	this.bottomLeft = this.grid9.bottomLeft;
+	this.bottomCenter = this.grid9.bottomCenter;
+	this.bottomRight = this.grid9.bottomRight;
 	this.renderCorners();
 	this.renderMiddle(0);
 	this.renderCenter(0);
@@ -430,10 +410,10 @@ fancy_Grid.__name__ = true;
 fancy_Grid.prototype = {
 	renderTo: function(parent,row,col) {
 		var k = "" + row + "-" + col;
-		var el = this.cache.get(k);
+		var el = this.cacheElement.get(k);
 		if(null == el) {
 			el = this.renderCell(row,col);
-			this.cache.set(k,el);
+			this.cacheElement.set(k,el);
 		}
 		dots_Dom.append(parent,el);
 	}
@@ -460,7 +440,7 @@ fancy_Grid.prototype = {
 		rightAnchor.style.left = "" + -this.hOffset(rightCols) + "px";
 		dots_Dom.append(this.grid9.middleLeft,leftAnchor);
 		dots_Dom.append(this.grid9.middleRight,rightAnchor);
-		while(top < limit + this.vSize(r)) {
+		while(top < limit + this.vSize(r) && r < this.rows - this.fixedBottom) {
 			var _g = 0;
 			while(_g < leftCols) {
 				var c = _g++;
@@ -490,7 +470,7 @@ fancy_Grid.prototype = {
 		bottomAnchor.style.left = "" + -this.leftRailSize + "px";
 		dots_Dom.append(this.grid9.topCenter,topAnchor);
 		dots_Dom.append(this.grid9.bottomCenter,bottomAnchor);
-		while(left < limit + this.hSize(c)) {
+		while(left < limit + this.hSize(c) && c < this.columns - this.fixedRight) {
 			var _g = 0;
 			while(_g < topRows) {
 				var r = _g++;

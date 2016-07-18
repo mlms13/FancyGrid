@@ -1,15 +1,10 @@
 -cp src
 -lib thx.core
 -lib dots
--lib utest
 -dce full
 
 --each
--cp demo
--main Main
--js demo/www/bundle.js
 
---next
 -D shallow-expose
 fancy.Grid
 -js dist/fancygrid.js

@@ -16,8 +16,8 @@ using thx.Iterators;
 
 typedef GridOptions = {
   render: Int -> Int -> Element,
-  vOffset: Int -> Float,
-  hOffset: Int -> Float,
+  ?vOffset: Int -> Float,
+  ?hOffset: Int -> Float,
   vSize: Int -> Float,
   hSize: Int -> Float,
   columns: Int,
@@ -63,8 +63,8 @@ class Grid {
 
   public function new(parent : Element, options : GridOptions) {
     render = options.render;
-    vOffset = options.vOffset;
-    hOffset = options.hOffset;
+    vOffset = assignVOffset(options.vOffset);
+    hOffset = assignHOffset(options.hOffset);
     vSize = options.vSize;
     hSize = options.hSize;
     rows = options.rows;
@@ -127,6 +127,34 @@ class Grid {
     renderMiddle(0);
     renderCenter(0);
     renderMain(0, 0);
+  }
+
+  function assignVOffset(f: Int -> Float): Int -> Float {
+    if(null != f) return f;
+    var cache = new Map();
+    return function(row) {
+      if(row == 0)
+        return 0;
+      if(cache.exists(row))
+        return cache.get(row);
+      var v = vOffset(row - 1) + vSize(row - 1);
+      cache.set(row, v);
+      return v;
+    };
+  }
+
+  function assignHOffset(f: Int -> Float): Int -> Float {
+    if(null != f) return f;
+    var cache = new Map();
+    return function(col) {
+      if(col == 0)
+        return 0;
+      if(cache.exists(col))
+        return cache.get(col);
+      var v = hOffset(col - 1) + hSize(col - 1);
+      cache.set(col, v);
+      return v;
+    };
   }
 
   function renderTo(parent: Element, row: Int, col: Int) {

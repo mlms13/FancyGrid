@@ -1,0 +1,5 @@
+-cp ../../src
+-lib thx.core
+-lib dots
+-main Main
+-js /www/bundle.js

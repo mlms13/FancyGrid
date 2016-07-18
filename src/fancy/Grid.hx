@@ -6,6 +6,7 @@ using dots.Dom;
 using fancy.core.Lazy;
 using fancy.core.Search;
 using thx.Nulls;
+using thx.Floats;
 using thx.Ints;
 using thx.Iterators;
 
@@ -18,8 +19,8 @@ typedef GridOptions = {
   render: Int -> Int -> Element,
   ?vOffset: Int -> Float,
   ?hOffset: Int -> Float,
-  vSize: Int -> Float,
-  hSize: Int -> Float,
+  ?vSize: Int -> Float,
+  ?hSize: Int -> Float,
   columns: Int,
   rows: Int,
   ?fixedLeft: Int,
@@ -38,6 +39,8 @@ class Grid {
   var bottomLeft: Element;
   var bottomCenter: Element;
   var bottomRight: Element;
+
+  var view: Element;
 
   var fixedLeft: Int;
   var fixedRight: Int;
@@ -62,11 +65,16 @@ class Grid {
   var cacheElement: Map<String, Element> = new Map();
 
   public function new(parent : Element, options : GridOptions) {
+    var fancyGrid = Dom.create("div.fancy-grid");
+    parent.append(fancyGrid);
+    view = Dom.create("div.view", []);
+    fancyGrid.append(view);
+
     render = options.render;
     vOffset = assignVOffset(options.vOffset);
     hOffset = assignHOffset(options.hOffset);
-    vSize = options.vSize;
-    hSize = options.hSize;
+    vSize = assignVSize(options.vSize);
+    hSize = assignHSize(options.hSize);
     rows = options.rows;
     columns = options.columns;
 
@@ -78,14 +86,10 @@ class Grid {
     var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
     var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
 
-    var fancyGrid = Dom.create("div.fancy-grid");
-    parent.append(fancyGrid);
-    var view = Dom.create("div.view", []);
-    fancyGrid.append(view);
     topRailSize = vOffset(fixedTop);
     leftRailSize = hOffset(fixedLeft);
-    bottomRailSize = fixedBottom == 0 ? 0 : contentHeight - vOffset(rows - fixedBottom);
-    rightRailSize = fixedRight == 0 ? 0 : contentWidth - hOffset(columns - fixedRight);
+    bottomRailSize = fixedBottom == 0 ? 0 : contentHeight - vOffset(rows - fixedBottom - 1);
+    rightRailSize = fixedRight == 0 ? 0 : contentWidth - hOffset(columns - fixedRight - 1);
 
     grid9 = new Grid9(view, {
       scrollerMinSize : 20.0,
@@ -129,6 +133,48 @@ class Grid {
     renderMain(0, 0);
   }
 
+  function assignVSize(f: Int -> Float): Int -> Float {
+    if(null != f) return f;
+    var cache = new Map();
+    return function(row) {
+      if(cache.exists(row))
+        return cache.get(row);
+      var v = 0.0;
+      for(i in 0...fixedLeft + 1) { // test headers and first content cell
+        // render cell in view
+        var el = renderAt(row, i);
+        view.append(el);
+        // get measure
+        v = v.max(el.getOuterHeight());
+        // remove cell
+        view.removeChild(el);
+      }
+      cache.set(row, v);
+      return v;
+    };
+  }
+
+  function assignHSize(f: Int -> Float): Int -> Float {
+    if(null != f) return f;
+    var cache = new Map();
+    return function(col) {
+      if(cache.exists(col))
+        return cache.get(col);
+      var v = 0.0;
+      for(i in 0...fixedTop + 1) { // test headers and first content cell
+        // render cell in view
+        var el = renderAt(i, col);
+        view.append(el);
+        // get measure
+        v = v.max(el.getOuterWidth());
+        // remove cell
+        view.removeChild(el);
+      }
+      cache.set(col, v);
+      return v;
+    };
+  }
+
   function assignVOffset(f: Int -> Float): Int -> Float {
     if(null != f) return f;
     var cache = new Map();
@@ -157,23 +203,24 @@ class Grid {
     };
   }
 
-  function renderTo(parent: Element, row: Int, col: Int) {
+  function renderAt(row: Int, col: Int) {
     var k = '$row-$col';
     var el = cacheElement.get(k);
     if(null == el) {
-      el = renderCell(row, col);
+      el = Dom.create('div.cell.row-$row.col-$col', [render(row, col)]);
       cacheElement.set(k, el);
     }
-    parent.append(el);
+    return el;
   }
 
-  function renderCell(row: Int, col: Int) {
-    var cell = Dom.create('div.cell.row-$row.col-$col', [render(row, col)]);
-    cell.style.top = '${vOffset(row)}px';
-    cell.style.left = '${hOffset(col)}px';
-    cell.style.width = '${hSize(row)}px';
-    cell.style.height = '${vSize(col)}px';
-    return cell;
+  function renderTo(parent: Element, row: Int, col: Int) {
+    var el = renderAt(row, col);
+    parent.append(el);
+    el.style.top = '${vOffset(row)}px';
+    el.style.left = '${hOffset(col)}px';
+    el.style.width = '${hSize(col)}px';
+    el.style.height = '${vSize(row)}px';
+    return el;
   }
 
   function renderMiddle(v: Float) {
@@ -251,7 +298,6 @@ class Grid {
     while(r < (rows - fixedBottom) && top < vlimit + vSize(r)) {
       var tleft = left;
       var tc = c;
-      // renderTo(anchor, r, tc);
       while(tc < (columns - fixedRight) && tleft < hlimit + hSize(tc)) {
         renderTo(anchor, r, tc);
         tleft += hSize(tc++);

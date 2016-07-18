@@ -165,17 +165,23 @@ Lambda.has = function(it,elt) {
 var Main = function() { };
 Main.__name__ = ["Main"];
 Main.main = function() {
-	var cellWidth = 65;
-	var cellHeight = 15;
-	var rows = 100;
-	var columns = 30;
+	var rows = 300;
+	var columns = 300;
 	var grid = new fancy_Grid(dots_Query.find(".my-fancy-grid-container"),{ render : function(row,col) {
-		return dots_Dom.create("span.value",null,null,"" + (row + 1) + ", " + (col + 1));
-	}, vSize : function(row1) {
-		return cellHeight;
-	}, hSize : function(column) {
-		return cellWidth;
-	}, columns : columns, rows : rows, fixedLeft : 4, fixedTop : 3, fixedBottom : 2, fixedRight : 1});
+		if(row == 0 && col == 0) return dots_Dom.create("span.value",null,null,""); else if(row == 0) return dots_Dom.create("span.value",null,null,Main.genTop(col)); else if(col == 0) return dots_Dom.create("span.value",null,null,Main.genLeft(row)); else return dots_Dom.create("span.value",null,null,"" + row + ", " + col);
+	}, columns : columns, rows : rows, fixedLeft : 1, fixedTop : 1, fixedBottom : 1, fixedRight : 1});
+};
+Main.genLeft = function(row) {
+	return Main.words(6,30);
+};
+Main.genTop = function(col) {
+	return Main.words(1,50);
+};
+Main.words = function(min,max) {
+	var dict = ["about","after","again","air","all","along","also","an","and","another","any","are","around","as","at","away","back","be","because","been","before","below","between","both","but","by","came","can","come","could","day","did","different","do","does","don't","down","each","end","even","every","few","find","first","for","found","from","get","give","go","good","great","had","has","have","he","help","her","here","him","his","home","house","how","I","if","in","into","is","it","its","just","know","large","last","left","like","line","little","long","look","made","make","man","many","may","me","men","might","more","most","Mr.","must","my","name","never","new","next","no","not","now","number","of","off","old","on","one","only","or","other","our","out","over","own","part","people","place","put","read","right","said","same","saw","say","see","she","should","show","small","so","some","something","sound","still","such","take","tell","than","that","the","them","then","there","these","they","thing","think","this","those","thought","three","through","time","to","together","too","two","under","up","us","use","very","want","water","way","we","well","went","were","what","when","where","which","while","who","why","will","with","word","work","world","would","write","year","you","your","was"];
+	return thx_Ints.range(min + Math.floor((max - min) * Math.random())).map(function(_) {
+		return dict[Math.floor(Math.random() * dict.length)];
+	}).join(" ");
 };
 Math.__name__ = ["Math"];
 var Reflect = function() { };
@@ -1013,11 +1019,15 @@ dots_Style.style = function(el) {
 var fancy_Grid = function(parent,options) {
 	this.cacheElement = new haxe_ds_StringMap();
 	var _g = this;
+	var fancyGrid = dots_Dom.create("div.fancy-grid");
+	dots_Dom.append(parent,fancyGrid);
+	this.view = dots_Dom.create("div.view",null,[]);
+	dots_Dom.append(fancyGrid,this.view);
 	this.render = options.render;
 	this.vOffset = this.assignVOffset(options.vOffset);
 	this.hOffset = this.assignHOffset(options.hOffset);
-	this.vSize = options.vSize;
-	this.hSize = options.hSize;
+	this.vSize = this.assignVSize(options.vSize);
+	this.hSize = this.assignHSize(options.hSize);
 	this.rows = options.rows;
 	this.columns = options.columns;
 	var t = (function() {
@@ -1054,15 +1064,11 @@ var fancy_Grid = function(parent,options) {
 	if(t3 != null) this.fixedBottom = t3; else this.fixedBottom = 0;
 	var contentWidth = this.hOffset(this.columns - 1) + this.hSize(this.columns - 1);
 	var contentHeight = this.vOffset(this.rows - 1) + this.vSize(this.rows - 1);
-	var fancyGrid = dots_Dom.create("div.fancy-grid");
-	dots_Dom.append(parent,fancyGrid);
-	var view = dots_Dom.create("div.view",null,[]);
-	dots_Dom.append(fancyGrid,view);
 	this.topRailSize = this.vOffset(this.fixedTop);
 	this.leftRailSize = this.hOffset(this.fixedLeft);
-	if(this.fixedBottom == 0) this.bottomRailSize = 0; else this.bottomRailSize = contentHeight - this.vOffset(this.rows - this.fixedBottom);
-	if(this.fixedRight == 0) this.rightRailSize = 0; else this.rightRailSize = contentWidth - this.hOffset(this.columns - this.fixedRight);
-	this.grid9 = new fancy_core_Grid9(view,{ scrollerMinSize : 20.0, scrollerMaxSize : 160.0, scrollerSize : 10, contentWidth : contentWidth, contentHeight : contentHeight, topRail : this.topRailSize, leftRail : this.leftRailSize, bottomRail : this.bottomRailSize, rightRail : this.rightRailSize, onScroll : function(x,y,ox,oy) {
+	if(this.fixedBottom == 0) this.bottomRailSize = 0; else this.bottomRailSize = contentHeight - this.vOffset(this.rows - this.fixedBottom - 1);
+	if(this.fixedRight == 0) this.rightRailSize = 0; else this.rightRailSize = contentWidth - this.hOffset(this.columns - this.fixedRight - 1);
+	this.grid9 = new fancy_core_Grid9(this.view,{ scrollerMinSize : 20.0, scrollerMaxSize : 160.0, scrollerSize : 10, contentWidth : contentWidth, contentHeight : contentHeight, topRail : this.topRailSize, leftRail : this.leftRailSize, bottomRail : this.bottomRailSize, rightRail : this.rightRailSize, onScroll : function(x,y,ox,oy) {
 		if(oy != y) _g.renderMiddle(y);
 		if(ox != x) _g.renderCenter(x);
 		_g.renderMain(x,y);
@@ -1096,6 +1102,7 @@ fancy_Grid.prototype = {
 	,bottomLeft: null
 	,bottomCenter: null
 	,bottomRight: null
+	,view: null
 	,fixedLeft: null
 	,fixedRight: null
 	,fixedTop: null
@@ -1113,6 +1120,46 @@ fancy_Grid.prototype = {
 	,bottomRailSize: null
 	,rightRailSize: null
 	,cacheElement: null
+	,assignVSize: function(f) {
+		var _g = this;
+		if(null != f) return f;
+		var cache = new haxe_ds_IntMap();
+		return function(row) {
+			if(cache.h.hasOwnProperty(row)) return cache.h[row];
+			var v = 0.0;
+			var _g2 = 0;
+			var _g1 = _g.fixedLeft + 1;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				var el = _g.renderAt(row,i);
+				dots_Dom.append(_g.view,el);
+				v = Math.max(v,el.offsetHeight);
+				_g.view.removeChild(el);
+			}
+			cache.h[row] = v;
+			return v;
+		};
+	}
+	,assignHSize: function(f) {
+		var _g = this;
+		if(null != f) return f;
+		var cache = new haxe_ds_IntMap();
+		return function(col) {
+			if(cache.h.hasOwnProperty(col)) return cache.h[col];
+			var v = 0.0;
+			var _g2 = 0;
+			var _g1 = _g.fixedTop + 1;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				var el = _g.renderAt(i,col);
+				dots_Dom.append(_g.view,el);
+				v = Math.max(v,el.offsetWidth);
+				_g.view.removeChild(el);
+			}
+			cache.h[col] = v;
+			return v;
+		};
+	}
 	,assignVOffset: function(f) {
 		var _g = this;
 		if(null != f) return f;
@@ -1137,22 +1184,23 @@ fancy_Grid.prototype = {
 			return v;
 		};
 	}
-	,renderTo: function(parent,row,col) {
+	,renderAt: function(row,col) {
 		var k = "" + row + "-" + col;
 		var el = this.cacheElement.get(k);
 		if(null == el) {
-			el = this.renderCell(row,col);
+			el = dots_Dom.create("div.cell.row-" + row + ".col-" + col,null,[this.render(row,col)]);
 			this.cacheElement.set(k,el);
 		}
-		dots_Dom.append(parent,el);
+		return el;
 	}
-	,renderCell: function(row,col) {
-		var cell = dots_Dom.create("div.cell.row-" + row + ".col-" + col,null,[this.render(row,col)]);
-		cell.style.top = "" + this.vOffset(row) + "px";
-		cell.style.left = "" + this.hOffset(col) + "px";
-		cell.style.width = "" + this.hSize(row) + "px";
-		cell.style.height = "" + this.vSize(col) + "px";
-		return cell;
+	,renderTo: function(parent,row,col) {
+		var el = this.renderAt(row,col);
+		dots_Dom.append(parent,el);
+		el.style.top = "" + this.vOffset(row) + "px";
+		el.style.left = "" + this.hOffset(col) + "px";
+		el.style.width = "" + this.hSize(col) + "px";
+		el.style.height = "" + this.vSize(row) + "px";
+		return el;
 	}
 	,renderMiddle: function(v) {
 		var r = fancy_core_Search.binary(0,this.rows,this.rowComparator(v)) + this.fixedTop;

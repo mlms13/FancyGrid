@@ -12,8 +12,6 @@ using thx.Iterators;
 
 // TODO
 // - snap to cell
-// - no fixed columns
-// - no fixed rows
 
 typedef GridOptions = {
   render: Int -> Int -> Element,
@@ -88,8 +86,8 @@ class Grid {
 
     topRailSize = vOffset(fixedTop);
     leftRailSize = hOffset(fixedLeft);
-    bottomRailSize = fixedBottom == 0 ? 0 : contentHeight - vOffset(rows - fixedBottom - 1);
-    rightRailSize = fixedRight == 0 ? 0 : contentWidth - hOffset(columns - fixedRight - 1);
+    bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
+    rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
 
     grid9 = new Grid9(view, {
       scrollerMinSize : 20.0,
@@ -140,7 +138,18 @@ class Grid {
       if(cache.exists(row))
         return cache.get(row);
       var v = 0.0;
-      for(i in 0...fixedLeft + 1) { // test headers and first content cell
+      // test left shoulder and first content cell
+      for(i in 0...(fixedLeft + 1).max(2)) {
+        // render cell in view
+        var el = renderAt(row, i);
+        view.append(el);
+        // get measure
+        v = v.max(el.getOuterHeight());
+        // remove cell
+        view.removeChild(el);
+      }
+      // test last content cell and right shoulder
+      for(i in columns - fixedRight - 1...columns) {
         // render cell in view
         var el = renderAt(row, i);
         view.append(el);
@@ -161,7 +170,18 @@ class Grid {
       if(cache.exists(col))
         return cache.get(col);
       var v = 0.0;
-      for(i in 0...fixedTop + 1) { // test headers and first content cell
+      // test headers and first content cell
+      for(i in 0...(fixedTop + 1).max(2)) {
+        // render cell in view
+        var el = renderAt(i, col);
+        view.append(el);
+        // get measure
+        v = v.max(el.getOuterWidth());
+        // remove cell
+        view.removeChild(el);
+      }
+      // test last content cell and footer
+      for(i in rows - fixedBottom - 1...rows) {
         // render cell in view
         var el = renderAt(i, col);
         view.append(el);
@@ -224,9 +244,9 @@ class Grid {
   }
 
   function renderMiddle(v: Float) {
-    var r = Search.binary(0, rows, rowComparator(v)) + fixedTop;
+    var r = Search.binary(0, rows, rowComparator(v + topRailSize)).max(fixedTop);
     var top = vOffset(r);
-    var limit = top + grid9.gridMiddleHeight;
+    var limit = top + vSize(r) + grid9.gridMiddleHeight;
 
     grid9.middleLeft.empty();
     grid9.middleRight.empty();
@@ -240,7 +260,8 @@ class Grid {
 
     grid9.middleLeft.append(leftAnchor);
     grid9.middleRight.append(rightAnchor);
-    while(top < limit + vSize(r) && r < rows - fixedBottom) {
+
+    while(r < (rows - fixedBottom) && top < (limit + vSize(r))) {
       for(c in 0...leftCols) {
         renderTo(leftAnchor, r, c);
       }
@@ -252,9 +273,9 @@ class Grid {
   }
 
   function renderCenter(v: Float) {
-    var c = Search.binary(0, columns, columnComparator(v)) + fixedLeft;
+    var c = Search.binary(0, columns, columnComparator(v + leftRailSize)).max(fixedLeft);
     var left = hOffset(c);
-    var limit = left + grid9.gridCenterWidth;
+    var limit = left + hSize(c) + grid9.gridCenterWidth;
 
     grid9.topCenter.empty();
     grid9.bottomCenter.empty();
@@ -268,7 +289,7 @@ class Grid {
 
     grid9.topCenter.append(topAnchor);
     grid9.bottomCenter.append(bottomAnchor);
-    while(left < limit + hSize(c) && c < columns - fixedRight) {
+    while(c < (columns - fixedRight) && left < (limit + hSize(c))) {
       for(r in 0...topRows) {
         renderTo(topAnchor, r, c);
       }
@@ -280,13 +301,13 @@ class Grid {
   }
 
   function renderMain(x: Float, y: Float) {
-    var r = Search.binary(0, rows, rowComparator(y)) + fixedTop;
-    var c = Search.binary(0, columns, columnComparator(x)) + fixedLeft;
+    var r = Search.binary(0, rows, rowComparator(y + topRailSize)).max(fixedTop);
+    var c = Search.binary(0, columns, columnComparator(x + leftRailSize)).max(fixedLeft);
 
     var left = hOffset(c);
     var top = vOffset(r);
-    var hlimit = left + grid9.gridCenterWidth;
-    var vlimit = top + grid9.gridMiddleHeight;
+    var hlimit = left + hSize(c) + grid9.gridCenterWidth;
+    var vlimit = top + vSize(r) + grid9.gridMiddleHeight;
 
     grid9.middleCenter.empty();
 
@@ -295,7 +316,7 @@ class Grid {
     anchor.style.left = '-${leftRailSize}px';
 
     grid9.middleCenter.append(anchor);
-    while(r < (rows - fixedBottom) && top < vlimit + vSize(r)) {
+    while(r < (rows - fixedBottom) && top < (vlimit + vSize(r))) {
       var tleft = left;
       var tc = c;
       while(tc < (columns - fixedRight) && tleft < hlimit + hSize(tc)) {

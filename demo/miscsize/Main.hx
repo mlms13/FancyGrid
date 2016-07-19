@@ -20,8 +20,8 @@ class Main {
       rows: rows,
       fixedLeft: 1,
       fixedTop: 1,
-      fixedBottom: 1,
-      fixedRight: 1,
+      fixedBottom: 0,
+      fixedRight: 0,
     } : GridOptions));
   }
 

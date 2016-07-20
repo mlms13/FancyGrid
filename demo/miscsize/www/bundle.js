@@ -817,7 +817,7 @@ dots_Dom.toString = function(node) {
 	} else if(node.nodeType == 3) {
 		return node.textContent;
 	} else {
-		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 146, className : "dots.Dom", methodName : "toString"});
+		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 145, className : "dots.Dom", methodName : "toString"});
 	}
 };
 dots_Dom.nodeText = function(node) {
@@ -828,7 +828,7 @@ dots_Dom.nodeText = function(node) {
 	} else if(node.nodeType == 3) {
 		return node.textContent;
 	} else {
-		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 157, className : "dots.Dom", methodName : "nodeText"});
+		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 156, className : "dots.Dom", methodName : "nodeText"});
 	}
 };
 dots_Dom.nodeListToArray = function(list) {
@@ -2923,6 +2923,7 @@ var fancy_core_Grid9 = function(parent,options) {
 		}
 	});
 	this.el.addEventListener("wheel",function(e) {
+		e.preventDefault();
 		_gthis.movePosition(e.deltaX,e.deltaY);
 		_gthis.refresh();
 	});

@@ -179,6 +179,7 @@ class Grid9 {
         onResize(size.w, size.h, osize.w, osize.h);
     });
     el.on("wheel", function(e: js.html.WheelEvent) {
+      e.preventDefault();
       movePosition(e.deltaX, e.deltaY);
       refresh();
     });

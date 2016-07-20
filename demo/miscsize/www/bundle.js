@@ -181,15 +181,147 @@ Lambda.has = function(it,elt) {
 var Main = function() { };
 Main.__name__ = ["Main"];
 Main.main = function() {
-	new fancy_Grid(dots_Query.find(".my-fancy-grid-container"),{ render : function(row,col) {
+	var grid = new fancy_Grid(dots_Query.find(".my-fancy-grid-container"),{ render : function(row,col) {
 		if(row == 0 && col == 0) {
-			return dots_Dom.create("span.value",null,null,"");
+			var doc = null;
+			if(null == doc) {
+				doc = window.document;
+			}
+			var el = doc.createElement("span");
+			var _g = 0;
+			var _g1 = [{ value : "value", name : "class"}];
+			while(_g < _g1.length) {
+				var o = _g1[_g];
+				++_g;
+				el.setAttribute(o.name,o.value);
+			}
+			var attrs = null;
+			if(null != attrs) {
+				var tmp = attrs.keys();
+				while(tmp.hasNext()) {
+					var attr = tmp.next();
+					el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+				}
+			}
+			var children = null;
+			if(null != children) {
+				var _g2 = 0;
+				while(_g2 < children.length) {
+					var child = children[_g2];
+					++_g2;
+					el.appendChild(child);
+				}
+			}
+			var textContent = "";
+			if(null != textContent) {
+				el.appendChild(doc.createTextNode(textContent));
+			}
+			return el;
 		} else if(row == 0) {
-			return dots_Dom.create("span.value",null,null,Main.genTop(col));
+			var doc1 = null;
+			if(null == doc1) {
+				doc1 = window.document;
+			}
+			var el1 = doc1.createElement("span");
+			var _g3 = 0;
+			var _g11 = [{ value : "value", name : "class"}];
+			while(_g3 < _g11.length) {
+				var o1 = _g11[_g3];
+				++_g3;
+				el1.setAttribute(o1.name,o1.value);
+			}
+			var attrs1 = null;
+			if(null != attrs1) {
+				var tmp1 = attrs1.keys();
+				while(tmp1.hasNext()) {
+					var attr1 = tmp1.next();
+					el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+				}
+			}
+			var children1 = null;
+			if(null != children1) {
+				var _g4 = 0;
+				while(_g4 < children1.length) {
+					var child1 = children1[_g4];
+					++_g4;
+					el1.appendChild(child1);
+				}
+			}
+			var textContent1 = Main.genTop(col);
+			if(null != textContent1) {
+				el1.appendChild(doc1.createTextNode(textContent1));
+			}
+			return el1;
 		} else if(col == 0) {
-			return dots_Dom.create("span.value",null,null,Main.genLeft(row));
+			var doc2 = null;
+			if(null == doc2) {
+				doc2 = window.document;
+			}
+			var el2 = doc2.createElement("span");
+			var _g5 = 0;
+			var _g12 = [{ value : "value", name : "class"}];
+			while(_g5 < _g12.length) {
+				var o2 = _g12[_g5];
+				++_g5;
+				el2.setAttribute(o2.name,o2.value);
+			}
+			var attrs2 = null;
+			if(null != attrs2) {
+				var tmp2 = attrs2.keys();
+				while(tmp2.hasNext()) {
+					var attr2 = tmp2.next();
+					el2.setAttribute(attr2,__map_reserved[attr2] != null?attrs2.getReserved(attr2):attrs2.h[attr2]);
+				}
+			}
+			var children2 = null;
+			if(null != children2) {
+				var _g6 = 0;
+				while(_g6 < children2.length) {
+					var child2 = children2[_g6];
+					++_g6;
+					el2.appendChild(child2);
+				}
+			}
+			var textContent2 = Main.genLeft(row);
+			if(null != textContent2) {
+				el2.appendChild(doc2.createTextNode(textContent2));
+			}
+			return el2;
 		} else {
-			return dots_Dom.create("span.value",null,null,"" + row + ", " + col);
+			var doc3 = null;
+			if(null == doc3) {
+				doc3 = window.document;
+			}
+			var el3 = doc3.createElement("span");
+			var _g7 = 0;
+			var _g13 = [{ value : "value", name : "class"}];
+			while(_g7 < _g13.length) {
+				var o3 = _g13[_g7];
+				++_g7;
+				el3.setAttribute(o3.name,o3.value);
+			}
+			var attrs3 = null;
+			if(null != attrs3) {
+				var tmp3 = attrs3.keys();
+				while(tmp3.hasNext()) {
+					var attr3 = tmp3.next();
+					el3.setAttribute(attr3,__map_reserved[attr3] != null?attrs3.getReserved(attr3):attrs3.h[attr3]);
+				}
+			}
+			var children3 = null;
+			if(null != children3) {
+				var _g8 = 0;
+				while(_g8 < children3.length) {
+					var child3 = children3[_g8];
+					++_g8;
+					el3.appendChild(child3);
+				}
+			}
+			var textContent3 = "" + row + ", " + col;
+			if(null != textContent3) {
+				el3.appendChild(doc3.createTextNode(textContent3));
+			}
+			return el3;
 		}
 	}, columns : 300, rows : 300, fixedLeft : 1, fixedTop : 1, fixedBottom : 0, fixedRight : 0});
 };
@@ -685,7 +817,7 @@ dots_Dom.toString = function(node) {
 	} else if(node.nodeType == 3) {
 		return node.textContent;
 	} else {
-		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 68, className : "dots.Dom", methodName : "toString"});
+		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 146, className : "dots.Dom", methodName : "toString"});
 	}
 };
 dots_Dom.nodeText = function(node) {
@@ -696,13 +828,13 @@ dots_Dom.nodeText = function(node) {
 	} else if(node.nodeType == 3) {
 		return node.textContent;
 	} else {
-		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 79, className : "dots.Dom", methodName : "nodeText"});
+		throw new thx_Error("invalid nodeType " + node.nodeType,null,{ fileName : "Dom.hx", lineNumber : 157, className : "dots.Dom", methodName : "nodeText"});
 	}
 };
 dots_Dom.nodeListToArray = function(list) {
 	return Array.prototype.slice.call(list,0);
 };
-dots_Dom.create = function(name,attrs,children,textContent,doc) {
+dots_Dom.parse = function(name,attrs,children,textContent,doc) {
 	var node = dots_SelectorParser.parseSelector(name,attrs);
 	if(null == doc) {
 		doc = window.document;
@@ -1245,9 +1377,75 @@ dots_Style.style = function(el) {
 var fancy_Grid = function(parent,options) {
 	this.cacheElement = new haxe_ds_StringMap();
 	var _gthis = this;
-	var fancyGrid = dots_Dom.create("div.fancy-grid");
+	var doc = null;
+	if(null == doc) {
+		doc = window.document;
+	}
+	var el = doc.createElement("div");
+	var _g = 0;
+	var _g1 = [{ value : "fancy-grid", name : "class"}];
+	while(_g < _g1.length) {
+		var o = _g1[_g];
+		++_g;
+		el.setAttribute(o.name,o.value);
+	}
+	var attrs = null;
+	if(null != attrs) {
+		var tmp = attrs.keys();
+		while(tmp.hasNext()) {
+			var attr = tmp.next();
+			el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+		}
+	}
+	var children = null;
+	if(null != children) {
+		var _g2 = 0;
+		while(_g2 < children.length) {
+			var child = children[_g2];
+			++_g2;
+			el.appendChild(child);
+		}
+	}
+	var textContent = null;
+	if(null != textContent) {
+		el.appendChild(doc.createTextNode(textContent));
+	}
+	var fancyGrid = el;
 	dots_Dom.append(parent,fancyGrid);
-	this.view = dots_Dom.create("div.view",null,[]);
+	var doc1 = null;
+	if(null == doc1) {
+		doc1 = window.document;
+	}
+	var el1 = doc1.createElement("div");
+	var _g3 = 0;
+	var _g11 = [{ value : "view", name : "class"}];
+	while(_g3 < _g11.length) {
+		var o1 = _g11[_g3];
+		++_g3;
+		el1.setAttribute(o1.name,o1.value);
+	}
+	var attrs1 = null;
+	if(null != attrs1) {
+		var tmp1 = attrs1.keys();
+		while(tmp1.hasNext()) {
+			var attr1 = tmp1.next();
+			el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+		}
+	}
+	var children1 = null;
+	if(null != children1) {
+		var _g4 = 0;
+		while(_g4 < children1.length) {
+			var child1 = children1[_g4];
+			++_g4;
+			el1.appendChild(child1);
+		}
+	}
+	var textContent1 = null;
+	if(null != textContent1) {
+		el1.appendChild(doc1.createTextNode(textContent1));
+	}
+	this.view = el1;
 	dots_Dom.append(fancyGrid,this.view);
 	this.render = options.render;
 	this.vOffset = this.assignVOffset(options.vOffset);
@@ -1256,11 +1454,12 @@ var fancy_Grid = function(parent,options) {
 	this.hSize = this.assignHSize(options.hSize);
 	this.rows = options.rows;
 	this.columns = options.columns;
+	var _0 = options;
 	var t;
-	if(null == options) {
+	if(null == _0) {
 		t = null;
 	} else {
-		var _1 = options.fixedLeft;
+		var _1 = _0.fixedLeft;
 		if(null == _1) {
 			t = null;
 		} else {
@@ -1268,11 +1467,12 @@ var fancy_Grid = function(parent,options) {
 		}
 	}
 	this.fixedLeft = t != null?t:0;
+	var _01 = options;
 	var t1;
-	if(null == options) {
+	if(null == _01) {
 		t1 = null;
 	} else {
-		var _11 = options.fixedRight;
+		var _11 = _01.fixedRight;
 		if(null == _11) {
 			t1 = null;
 		} else {
@@ -1280,11 +1480,12 @@ var fancy_Grid = function(parent,options) {
 		}
 	}
 	this.fixedRight = t1 != null?t1:0;
+	var _02 = options;
 	var t2;
-	if(null == options) {
+	if(null == _02) {
 		t2 = null;
 	} else {
-		var _12 = options.fixedTop;
+		var _12 = _02.fixedTop;
 		if(null == _12) {
 			t2 = null;
 		} else {
@@ -1292,11 +1493,12 @@ var fancy_Grid = function(parent,options) {
 		}
 	}
 	this.fixedTop = t2 != null?t2:0;
+	var _03 = options;
 	var t3;
-	if(null == options) {
+	if(null == _03) {
 		t3 = null;
 	} else {
-		var _13 = options.fixedBottom;
+		var _13 = _03.fixedBottom;
 		if(null == _13) {
 			t3 = null;
 		} else {
@@ -1475,7 +1677,9 @@ fancy_Grid.prototype = {
 		var _this = this.cacheElement;
 		var el = __map_reserved[k] != null?_this.getReserved(k):_this.h[k];
 		if(null == el) {
-			el = dots_Dom.create("div.cell.row-" + row + ".col-" + col,null,[this.render(row,col)]);
+			el = window.document.createElement("div");
+			el.className = "cell row-" + row + " col-" + col;
+			el.appendChild(this.render(row,col));
 			var _this1 = this.cacheElement;
 			if(__map_reserved[k] != null) {
 				_this1.setReserved(k,el);
@@ -1502,8 +1706,74 @@ fancy_Grid.prototype = {
 		var limit = top + this.vSize(r) + this.grid9.get_gridMiddleHeight();
 		dots_Dom.empty(this.grid9.middleLeft);
 		dots_Dom.empty(this.grid9.middleRight);
-		var leftAnchor = dots_Dom.create("div.anchor.middle.left");
-		var rightAnchor = dots_Dom.create("div.anchor.middle.right");
+		var doc = null;
+		if(null == doc) {
+			doc = window.document;
+		}
+		var el = doc.createElement("div");
+		var _g = 0;
+		var _g1 = [{ value : "anchor middle left", name : "class"}];
+		while(_g < _g1.length) {
+			var o = _g1[_g];
+			++_g;
+			el.setAttribute(o.name,o.value);
+		}
+		var attrs = null;
+		if(null != attrs) {
+			var tmp = attrs.keys();
+			while(tmp.hasNext()) {
+				var attr = tmp.next();
+				el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+			}
+		}
+		var children = null;
+		if(null != children) {
+			var _g2 = 0;
+			while(_g2 < children.length) {
+				var child = children[_g2];
+				++_g2;
+				el.appendChild(child);
+			}
+		}
+		var textContent = null;
+		if(null != textContent) {
+			el.appendChild(doc.createTextNode(textContent));
+		}
+		var leftAnchor = el;
+		var doc1 = null;
+		if(null == doc1) {
+			doc1 = window.document;
+		}
+		var el1 = doc1.createElement("div");
+		var _g3 = 0;
+		var _g11 = [{ value : "anchor middle right", name : "class"}];
+		while(_g3 < _g11.length) {
+			var o1 = _g11[_g3];
+			++_g3;
+			el1.setAttribute(o1.name,o1.value);
+		}
+		var attrs1 = null;
+		if(null != attrs1) {
+			var tmp1 = attrs1.keys();
+			while(tmp1.hasNext()) {
+				var attr1 = tmp1.next();
+				el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+			}
+		}
+		var children1 = null;
+		if(null != children1) {
+			var _g4 = 0;
+			while(_g4 < children1.length) {
+				var child1 = children1[_g4];
+				++_g4;
+				el1.appendChild(child1);
+			}
+		}
+		var textContent1 = null;
+		if(null != textContent1) {
+			el1.appendChild(doc1.createTextNode(textContent1));
+		}
+		var rightAnchor = el1;
 		var a1 = this.fixedLeft;
 		var b1 = this.columns;
 		var leftCols = a1 < b1?a1:b1;
@@ -1516,12 +1786,12 @@ fancy_Grid.prototype = {
 		dots_Dom.append(this.grid9.middleLeft,leftAnchor);
 		dots_Dom.append(this.grid9.middleRight,rightAnchor);
 		while(r < this.rows - this.fixedBottom && top < limit + this.vSize(r)) {
-			var _g1 = 0;
-			var _g = leftCols;
-			while(_g1 < _g) this.renderTo(leftAnchor,r,_g1++);
-			var _g11 = rightCols;
-			var _g2 = this.columns;
-			while(_g11 < _g2) this.renderTo(rightAnchor,r,_g11++);
+			var _g12 = 0;
+			var _g5 = leftCols;
+			while(_g12 < _g5) this.renderTo(leftAnchor,r,_g12++);
+			var _g13 = rightCols;
+			var _g6 = this.columns;
+			while(_g13 < _g6) this.renderTo(rightAnchor,r,_g13++);
 			top += this.vSize(r++);
 		}
 	}
@@ -1533,8 +1803,74 @@ fancy_Grid.prototype = {
 		var limit = left + this.hSize(c) + this.grid9.get_gridCenterWidth();
 		dots_Dom.empty(this.grid9.topCenter);
 		dots_Dom.empty(this.grid9.bottomCenter);
-		var topAnchor = dots_Dom.create("div.anchor.top.center");
-		var bottomAnchor = dots_Dom.create("div.anchor.bottom.center");
+		var doc = null;
+		if(null == doc) {
+			doc = window.document;
+		}
+		var el = doc.createElement("div");
+		var _g = 0;
+		var _g1 = [{ value : "anchor top center", name : "class"}];
+		while(_g < _g1.length) {
+			var o = _g1[_g];
+			++_g;
+			el.setAttribute(o.name,o.value);
+		}
+		var attrs = null;
+		if(null != attrs) {
+			var tmp = attrs.keys();
+			while(tmp.hasNext()) {
+				var attr = tmp.next();
+				el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+			}
+		}
+		var children = null;
+		if(null != children) {
+			var _g2 = 0;
+			while(_g2 < children.length) {
+				var child = children[_g2];
+				++_g2;
+				el.appendChild(child);
+			}
+		}
+		var textContent = null;
+		if(null != textContent) {
+			el.appendChild(doc.createTextNode(textContent));
+		}
+		var topAnchor = el;
+		var doc1 = null;
+		if(null == doc1) {
+			doc1 = window.document;
+		}
+		var el1 = doc1.createElement("div");
+		var _g3 = 0;
+		var _g11 = [{ value : "anchor bottom center", name : "class"}];
+		while(_g3 < _g11.length) {
+			var o1 = _g11[_g3];
+			++_g3;
+			el1.setAttribute(o1.name,o1.value);
+		}
+		var attrs1 = null;
+		if(null != attrs1) {
+			var tmp1 = attrs1.keys();
+			while(tmp1.hasNext()) {
+				var attr1 = tmp1.next();
+				el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+			}
+		}
+		var children1 = null;
+		if(null != children1) {
+			var _g4 = 0;
+			while(_g4 < children1.length) {
+				var child1 = children1[_g4];
+				++_g4;
+				el1.appendChild(child1);
+			}
+		}
+		var textContent1 = null;
+		if(null != textContent1) {
+			el1.appendChild(doc1.createTextNode(textContent1));
+		}
+		var bottomAnchor = el1;
 		var a1 = this.fixedTop;
 		var b1 = this.rows;
 		var topRows = a1 < b1?a1:b1;
@@ -1547,12 +1883,12 @@ fancy_Grid.prototype = {
 		dots_Dom.append(this.grid9.topCenter,topAnchor);
 		dots_Dom.append(this.grid9.bottomCenter,bottomAnchor);
 		while(c < this.columns - this.fixedRight && left < limit + this.hSize(c)) {
-			var _g1 = 0;
-			var _g = topRows;
-			while(_g1 < _g) this.renderTo(topAnchor,_g1++,c);
-			var _g11 = bottomRows;
-			var _g2 = this.rows;
-			while(_g11 < _g2) this.renderTo(bottomAnchor,_g11++,c);
+			var _g12 = 0;
+			var _g5 = topRows;
+			while(_g12 < _g5) this.renderTo(topAnchor,_g12++,c);
+			var _g13 = bottomRows;
+			var _g6 = this.rows;
+			while(_g13 < _g6) this.renderTo(bottomAnchor,_g13++,c);
 			left += this.hSize(c++);
 		}
 	}
@@ -1568,7 +1904,40 @@ fancy_Grid.prototype = {
 		var hlimit = left + this.hSize(c) + this.grid9.get_gridCenterWidth();
 		var vlimit = top + this.vSize(r) + this.grid9.get_gridMiddleHeight();
 		dots_Dom.empty(this.grid9.middleCenter);
-		var anchor = dots_Dom.create("div.anchor.middle.center");
+		var doc = null;
+		if(null == doc) {
+			doc = window.document;
+		}
+		var el = doc.createElement("div");
+		var _g = 0;
+		var _g1 = [{ value : "anchor middle center", name : "class"}];
+		while(_g < _g1.length) {
+			var o = _g1[_g];
+			++_g;
+			el.setAttribute(o.name,o.value);
+		}
+		var attrs = null;
+		if(null != attrs) {
+			var tmp = attrs.keys();
+			while(tmp.hasNext()) {
+				var attr = tmp.next();
+				el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+			}
+		}
+		var children = null;
+		if(null != children) {
+			var _g2 = 0;
+			while(_g2 < children.length) {
+				var child = children[_g2];
+				++_g2;
+				el.appendChild(child);
+			}
+		}
+		var textContent = null;
+		if(null != textContent) {
+			el.appendChild(doc.createTextNode(textContent));
+		}
+		var anchor = el;
 		anchor.style.top = "-" + this.topRailSize + "px";
 		anchor.style.left = "-" + this.leftRailSize + "px";
 		dots_Dom.append(this.grid9.middleCenter,anchor);
@@ -1619,10 +1988,142 @@ fancy_Grid.prototype = {
 		var left = a2 < b1?a2:b1;
 		var a3 = this.columns - this.fixedRight;
 		var right = a3 > 0?a3:0;
-		var bottomLeftAnchor = dots_Dom.create("div.anchor.bottom.left");
-		var bottomRightAnchor = dots_Dom.create("div.anchor.bottom.right");
-		var topLeftAnchor = dots_Dom.create("div.anchor.top.left");
-		var topRightAnchor = dots_Dom.create("div.anchor.top.right");
+		var doc = null;
+		if(null == doc) {
+			doc = window.document;
+		}
+		var el = doc.createElement("div");
+		var _g = 0;
+		var _g1 = [{ value : "anchor bottom left", name : "class"}];
+		while(_g < _g1.length) {
+			var o = _g1[_g];
+			++_g;
+			el.setAttribute(o.name,o.value);
+		}
+		var attrs = null;
+		if(null != attrs) {
+			var tmp = attrs.keys();
+			while(tmp.hasNext()) {
+				var attr = tmp.next();
+				el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+			}
+		}
+		var children = null;
+		if(null != children) {
+			var _g2 = 0;
+			while(_g2 < children.length) {
+				var child = children[_g2];
+				++_g2;
+				el.appendChild(child);
+			}
+		}
+		var textContent = null;
+		if(null != textContent) {
+			el.appendChild(doc.createTextNode(textContent));
+		}
+		var bottomLeftAnchor = el;
+		var doc1 = null;
+		if(null == doc1) {
+			doc1 = window.document;
+		}
+		var el1 = doc1.createElement("div");
+		var _g3 = 0;
+		var _g11 = [{ value : "anchor bottom right", name : "class"}];
+		while(_g3 < _g11.length) {
+			var o1 = _g11[_g3];
+			++_g3;
+			el1.setAttribute(o1.name,o1.value);
+		}
+		var attrs1 = null;
+		if(null != attrs1) {
+			var tmp1 = attrs1.keys();
+			while(tmp1.hasNext()) {
+				var attr1 = tmp1.next();
+				el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+			}
+		}
+		var children1 = null;
+		if(null != children1) {
+			var _g4 = 0;
+			while(_g4 < children1.length) {
+				var child1 = children1[_g4];
+				++_g4;
+				el1.appendChild(child1);
+			}
+		}
+		var textContent1 = null;
+		if(null != textContent1) {
+			el1.appendChild(doc1.createTextNode(textContent1));
+		}
+		var bottomRightAnchor = el1;
+		var doc2 = null;
+		if(null == doc2) {
+			doc2 = window.document;
+		}
+		var el2 = doc2.createElement("div");
+		var _g5 = 0;
+		var _g12 = [{ value : "anchor top left", name : "class"}];
+		while(_g5 < _g12.length) {
+			var o2 = _g12[_g5];
+			++_g5;
+			el2.setAttribute(o2.name,o2.value);
+		}
+		var attrs2 = null;
+		if(null != attrs2) {
+			var tmp2 = attrs2.keys();
+			while(tmp2.hasNext()) {
+				var attr2 = tmp2.next();
+				el2.setAttribute(attr2,__map_reserved[attr2] != null?attrs2.getReserved(attr2):attrs2.h[attr2]);
+			}
+		}
+		var children2 = null;
+		if(null != children2) {
+			var _g6 = 0;
+			while(_g6 < children2.length) {
+				var child2 = children2[_g6];
+				++_g6;
+				el2.appendChild(child2);
+			}
+		}
+		var textContent2 = null;
+		if(null != textContent2) {
+			el2.appendChild(doc2.createTextNode(textContent2));
+		}
+		var topLeftAnchor = el2;
+		var doc3 = null;
+		if(null == doc3) {
+			doc3 = window.document;
+		}
+		var el3 = doc3.createElement("div");
+		var _g7 = 0;
+		var _g13 = [{ value : "anchor top right", name : "class"}];
+		while(_g7 < _g13.length) {
+			var o3 = _g13[_g7];
+			++_g7;
+			el3.setAttribute(o3.name,o3.value);
+		}
+		var attrs3 = null;
+		if(null != attrs3) {
+			var tmp3 = attrs3.keys();
+			while(tmp3.hasNext()) {
+				var attr3 = tmp3.next();
+				el3.setAttribute(attr3,__map_reserved[attr3] != null?attrs3.getReserved(attr3):attrs3.h[attr3]);
+			}
+		}
+		var children3 = null;
+		if(null != children3) {
+			var _g8 = 0;
+			while(_g8 < children3.length) {
+				var child3 = children3[_g8];
+				++_g8;
+				el3.appendChild(child3);
+			}
+		}
+		var textContent3 = null;
+		if(null != textContent3) {
+			el3.appendChild(doc3.createTextNode(textContent3));
+		}
+		var topRightAnchor = el3;
 		var vDelta = this.vOffset(bottom);
 		var hDelta = this.hOffset(right);
 		bottomRightAnchor.style.left = "" + -hDelta + "px";
@@ -1633,31 +2134,31 @@ fancy_Grid.prototype = {
 		dots_Dom.empty(this.topRight);
 		dots_Dom.append(this.topLeft,topLeftAnchor);
 		dots_Dom.append(this.topRight,topRightAnchor);
-		var _g1 = 0;
-		var _g = top;
-		while(_g1 < _g) {
-			var r = _g1++;
-			var _g3 = 0;
-			var _g2 = left;
-			while(_g3 < _g2) this.renderTo(topLeftAnchor,r,_g3++);
-			var _g31 = right;
-			var _g21 = this.columns;
-			while(_g31 < _g21) this.renderTo(topRightAnchor,r,_g31++);
+		var _g14 = 0;
+		var _g9 = top;
+		while(_g14 < _g9) {
+			var r = _g14++;
+			var _g31 = 0;
+			var _g21 = left;
+			while(_g31 < _g21) this.renderTo(topLeftAnchor,r,_g31++);
+			var _g32 = right;
+			var _g22 = this.columns;
+			while(_g32 < _g22) this.renderTo(topRightAnchor,r,_g32++);
 		}
 		dots_Dom.empty(this.bottomLeft);
 		dots_Dom.empty(this.bottomRight);
 		dots_Dom.append(this.bottomLeft,bottomLeftAnchor);
 		dots_Dom.append(this.bottomRight,bottomRightAnchor);
-		var _g11 = bottom;
-		var _g4 = this.rows;
-		while(_g11 < _g4) {
-			var r1 = _g11++;
-			var _g32 = 0;
-			var _g22 = left;
-			while(_g32 < _g22) this.renderTo(bottomLeftAnchor,r1,_g32++);
-			var _g33 = right;
-			var _g23 = this.columns;
-			while(_g33 < _g23) this.renderTo(bottomRightAnchor,r1,_g33++);
+		var _g15 = bottom;
+		var _g10 = this.rows;
+		while(_g15 < _g10) {
+			var r1 = _g15++;
+			var _g33 = 0;
+			var _g23 = left;
+			while(_g33 < _g23) this.renderTo(bottomLeftAnchor,r1,_g33++);
+			var _g34 = right;
+			var _g24 = this.columns;
+			while(_g34 < _g24) this.renderTo(bottomRightAnchor,r1,_g34++);
 		}
 	}
 	,__class__: fancy_Grid
@@ -1783,7 +2284,549 @@ var fancy_core_Grid9 = function(parent,options) {
 		}
 	}
 	this.scrollerMargin = t2 != null?t2:0;
-	this.el = dots_Dom.create("div.grid9",null,[dots_Dom.create("div.scroller.scroller-v"),dots_Dom.create("div.scroller.scroller-h"),dots_Dom.create("div.row.top"),dots_Dom.create("div.row.bottom"),dots_Dom.create("div.column.left"),dots_Dom.create("div.column.right"),dots_Dom.create("div.pane.top.left"),dots_Dom.create("div.pane.top.center"),dots_Dom.create("div.pane.top.right"),dots_Dom.create("div.pane.middle.left"),dots_Dom.create("div.pane.middle.center"),dots_Dom.create("div.pane.middle.right"),dots_Dom.create("div.pane.bottom.left"),dots_Dom.create("div.pane.bottom.center"),dots_Dom.create("div.pane.bottom.right")]);
+	var doc = null;
+	if(null == doc) {
+		doc = window.document;
+	}
+	var el = doc.createElement("div");
+	var _g = 0;
+	var _g1 = [{ value : "grid9", name : "class"}];
+	while(_g < _g1.length) {
+		var o = _g1[_g];
+		++_g;
+		el.setAttribute(o.name,o.value);
+	}
+	var attrs = null;
+	if(null != attrs) {
+		var tmp = attrs.keys();
+		while(tmp.hasNext()) {
+			var attr = tmp.next();
+			el.setAttribute(attr,__map_reserved[attr] != null?attrs.getReserved(attr):attrs.h[attr]);
+		}
+	}
+	var doc1 = null;
+	if(null == doc1) {
+		doc1 = window.document;
+	}
+	var el1 = doc1.createElement("div");
+	var _g2 = 0;
+	var _g11 = [{ value : "scroller scroller-v", name : "class"}];
+	while(_g2 < _g11.length) {
+		var o1 = _g11[_g2];
+		++_g2;
+		el1.setAttribute(o1.name,o1.value);
+	}
+	var attrs1 = null;
+	if(null != attrs1) {
+		var tmp1 = attrs1.keys();
+		while(tmp1.hasNext()) {
+			var attr1 = tmp1.next();
+			el1.setAttribute(attr1,__map_reserved[attr1] != null?attrs1.getReserved(attr1):attrs1.h[attr1]);
+		}
+	}
+	var children = null;
+	if(null != children) {
+		var _g3 = 0;
+		while(_g3 < children.length) {
+			var child = children[_g3];
+			++_g3;
+			el1.appendChild(child);
+		}
+	}
+	var textContent = null;
+	if(null != textContent) {
+		el1.appendChild(doc1.createTextNode(textContent));
+	}
+	var tmp2 = el1;
+	var doc2 = null;
+	if(null == doc2) {
+		doc2 = window.document;
+	}
+	var el2 = doc2.createElement("div");
+	var _g4 = 0;
+	var _g12 = [{ value : "scroller scroller-h", name : "class"}];
+	while(_g4 < _g12.length) {
+		var o2 = _g12[_g4];
+		++_g4;
+		el2.setAttribute(o2.name,o2.value);
+	}
+	var attrs2 = null;
+	if(null != attrs2) {
+		var tmp3 = attrs2.keys();
+		while(tmp3.hasNext()) {
+			var attr2 = tmp3.next();
+			el2.setAttribute(attr2,__map_reserved[attr2] != null?attrs2.getReserved(attr2):attrs2.h[attr2]);
+		}
+	}
+	var children1 = null;
+	if(null != children1) {
+		var _g5 = 0;
+		while(_g5 < children1.length) {
+			var child1 = children1[_g5];
+			++_g5;
+			el2.appendChild(child1);
+		}
+	}
+	var textContent1 = null;
+	if(null != textContent1) {
+		el2.appendChild(doc2.createTextNode(textContent1));
+	}
+	var tmp4 = el2;
+	var doc3 = null;
+	if(null == doc3) {
+		doc3 = window.document;
+	}
+	var el3 = doc3.createElement("div");
+	var _g6 = 0;
+	var _g13 = [{ value : "row top", name : "class"}];
+	while(_g6 < _g13.length) {
+		var o3 = _g13[_g6];
+		++_g6;
+		el3.setAttribute(o3.name,o3.value);
+	}
+	var attrs3 = null;
+	if(null != attrs3) {
+		var tmp5 = attrs3.keys();
+		while(tmp5.hasNext()) {
+			var attr3 = tmp5.next();
+			el3.setAttribute(attr3,__map_reserved[attr3] != null?attrs3.getReserved(attr3):attrs3.h[attr3]);
+		}
+	}
+	var children2 = null;
+	if(null != children2) {
+		var _g7 = 0;
+		while(_g7 < children2.length) {
+			var child2 = children2[_g7];
+			++_g7;
+			el3.appendChild(child2);
+		}
+	}
+	var textContent2 = null;
+	if(null != textContent2) {
+		el3.appendChild(doc3.createTextNode(textContent2));
+	}
+	var tmp6 = el3;
+	var doc4 = null;
+	if(null == doc4) {
+		doc4 = window.document;
+	}
+	var el4 = doc4.createElement("div");
+	var _g8 = 0;
+	var _g14 = [{ value : "row bottom", name : "class"}];
+	while(_g8 < _g14.length) {
+		var o4 = _g14[_g8];
+		++_g8;
+		el4.setAttribute(o4.name,o4.value);
+	}
+	var attrs4 = null;
+	if(null != attrs4) {
+		var tmp7 = attrs4.keys();
+		while(tmp7.hasNext()) {
+			var attr4 = tmp7.next();
+			el4.setAttribute(attr4,__map_reserved[attr4] != null?attrs4.getReserved(attr4):attrs4.h[attr4]);
+		}
+	}
+	var children3 = null;
+	if(null != children3) {
+		var _g9 = 0;
+		while(_g9 < children3.length) {
+			var child3 = children3[_g9];
+			++_g9;
+			el4.appendChild(child3);
+		}
+	}
+	var textContent3 = null;
+	if(null != textContent3) {
+		el4.appendChild(doc4.createTextNode(textContent3));
+	}
+	var tmp8 = el4;
+	var doc5 = null;
+	if(null == doc5) {
+		doc5 = window.document;
+	}
+	var el5 = doc5.createElement("div");
+	var _g10 = 0;
+	var _g15 = [{ value : "column left", name : "class"}];
+	while(_g10 < _g15.length) {
+		var o5 = _g15[_g10];
+		++_g10;
+		el5.setAttribute(o5.name,o5.value);
+	}
+	var attrs5 = null;
+	if(null != attrs5) {
+		var tmp9 = attrs5.keys();
+		while(tmp9.hasNext()) {
+			var attr5 = tmp9.next();
+			el5.setAttribute(attr5,__map_reserved[attr5] != null?attrs5.getReserved(attr5):attrs5.h[attr5]);
+		}
+	}
+	var children4 = null;
+	if(null != children4) {
+		var _g16 = 0;
+		while(_g16 < children4.length) {
+			var child4 = children4[_g16];
+			++_g16;
+			el5.appendChild(child4);
+		}
+	}
+	var textContent4 = null;
+	if(null != textContent4) {
+		el5.appendChild(doc5.createTextNode(textContent4));
+	}
+	var tmp10 = el5;
+	var doc6 = null;
+	if(null == doc6) {
+		doc6 = window.document;
+	}
+	var el6 = doc6.createElement("div");
+	var _g17 = 0;
+	var _g18 = [{ value : "column right", name : "class"}];
+	while(_g17 < _g18.length) {
+		var o6 = _g18[_g17];
+		++_g17;
+		el6.setAttribute(o6.name,o6.value);
+	}
+	var attrs6 = null;
+	if(null != attrs6) {
+		var tmp11 = attrs6.keys();
+		while(tmp11.hasNext()) {
+			var attr6 = tmp11.next();
+			el6.setAttribute(attr6,__map_reserved[attr6] != null?attrs6.getReserved(attr6):attrs6.h[attr6]);
+		}
+	}
+	var children5 = null;
+	if(null != children5) {
+		var _g19 = 0;
+		while(_g19 < children5.length) {
+			var child5 = children5[_g19];
+			++_g19;
+			el6.appendChild(child5);
+		}
+	}
+	var textContent5 = null;
+	if(null != textContent5) {
+		el6.appendChild(doc6.createTextNode(textContent5));
+	}
+	var tmp12 = el6;
+	var doc7 = null;
+	if(null == doc7) {
+		doc7 = window.document;
+	}
+	var el7 = doc7.createElement("div");
+	var _g20 = 0;
+	var _g110 = [{ value : "pane top left", name : "class"}];
+	while(_g20 < _g110.length) {
+		var o7 = _g110[_g20];
+		++_g20;
+		el7.setAttribute(o7.name,o7.value);
+	}
+	var attrs7 = null;
+	if(null != attrs7) {
+		var tmp13 = attrs7.keys();
+		while(tmp13.hasNext()) {
+			var attr7 = tmp13.next();
+			el7.setAttribute(attr7,__map_reserved[attr7] != null?attrs7.getReserved(attr7):attrs7.h[attr7]);
+		}
+	}
+	var children6 = null;
+	if(null != children6) {
+		var _g21 = 0;
+		while(_g21 < children6.length) {
+			var child6 = children6[_g21];
+			++_g21;
+			el7.appendChild(child6);
+		}
+	}
+	var textContent6 = null;
+	if(null != textContent6) {
+		el7.appendChild(doc7.createTextNode(textContent6));
+	}
+	var tmp14 = el7;
+	var doc8 = null;
+	if(null == doc8) {
+		doc8 = window.document;
+	}
+	var el8 = doc8.createElement("div");
+	var _g22 = 0;
+	var _g111 = [{ value : "pane top center", name : "class"}];
+	while(_g22 < _g111.length) {
+		var o8 = _g111[_g22];
+		++_g22;
+		el8.setAttribute(o8.name,o8.value);
+	}
+	var attrs8 = null;
+	if(null != attrs8) {
+		var tmp15 = attrs8.keys();
+		while(tmp15.hasNext()) {
+			var attr8 = tmp15.next();
+			el8.setAttribute(attr8,__map_reserved[attr8] != null?attrs8.getReserved(attr8):attrs8.h[attr8]);
+		}
+	}
+	var children7 = null;
+	if(null != children7) {
+		var _g23 = 0;
+		while(_g23 < children7.length) {
+			var child7 = children7[_g23];
+			++_g23;
+			el8.appendChild(child7);
+		}
+	}
+	var textContent7 = null;
+	if(null != textContent7) {
+		el8.appendChild(doc8.createTextNode(textContent7));
+	}
+	var tmp16 = el8;
+	var doc9 = null;
+	if(null == doc9) {
+		doc9 = window.document;
+	}
+	var el9 = doc9.createElement("div");
+	var _g24 = 0;
+	var _g112 = [{ value : "pane top right", name : "class"}];
+	while(_g24 < _g112.length) {
+		var o9 = _g112[_g24];
+		++_g24;
+		el9.setAttribute(o9.name,o9.value);
+	}
+	var attrs9 = null;
+	if(null != attrs9) {
+		var tmp17 = attrs9.keys();
+		while(tmp17.hasNext()) {
+			var attr9 = tmp17.next();
+			el9.setAttribute(attr9,__map_reserved[attr9] != null?attrs9.getReserved(attr9):attrs9.h[attr9]);
+		}
+	}
+	var children8 = null;
+	if(null != children8) {
+		var _g25 = 0;
+		while(_g25 < children8.length) {
+			var child8 = children8[_g25];
+			++_g25;
+			el9.appendChild(child8);
+		}
+	}
+	var textContent8 = null;
+	if(null != textContent8) {
+		el9.appendChild(doc9.createTextNode(textContent8));
+	}
+	var tmp18 = el9;
+	var doc10 = null;
+	if(null == doc10) {
+		doc10 = window.document;
+	}
+	var el10 = doc10.createElement("div");
+	var _g26 = 0;
+	var _g113 = [{ value : "pane middle left", name : "class"}];
+	while(_g26 < _g113.length) {
+		var o10 = _g113[_g26];
+		++_g26;
+		el10.setAttribute(o10.name,o10.value);
+	}
+	var attrs10 = null;
+	if(null != attrs10) {
+		var tmp19 = attrs10.keys();
+		while(tmp19.hasNext()) {
+			var attr10 = tmp19.next();
+			el10.setAttribute(attr10,__map_reserved[attr10] != null?attrs10.getReserved(attr10):attrs10.h[attr10]);
+		}
+	}
+	var children9 = null;
+	if(null != children9) {
+		var _g27 = 0;
+		while(_g27 < children9.length) {
+			var child9 = children9[_g27];
+			++_g27;
+			el10.appendChild(child9);
+		}
+	}
+	var textContent9 = null;
+	if(null != textContent9) {
+		el10.appendChild(doc10.createTextNode(textContent9));
+	}
+	var tmp20 = el10;
+	var doc11 = null;
+	if(null == doc11) {
+		doc11 = window.document;
+	}
+	var el11 = doc11.createElement("div");
+	var _g28 = 0;
+	var _g114 = [{ value : "pane middle center", name : "class"}];
+	while(_g28 < _g114.length) {
+		var o11 = _g114[_g28];
+		++_g28;
+		el11.setAttribute(o11.name,o11.value);
+	}
+	var attrs11 = null;
+	if(null != attrs11) {
+		var tmp21 = attrs11.keys();
+		while(tmp21.hasNext()) {
+			var attr11 = tmp21.next();
+			el11.setAttribute(attr11,__map_reserved[attr11] != null?attrs11.getReserved(attr11):attrs11.h[attr11]);
+		}
+	}
+	var children10 = null;
+	if(null != children10) {
+		var _g29 = 0;
+		while(_g29 < children10.length) {
+			var child10 = children10[_g29];
+			++_g29;
+			el11.appendChild(child10);
+		}
+	}
+	var textContent10 = null;
+	if(null != textContent10) {
+		el11.appendChild(doc11.createTextNode(textContent10));
+	}
+	var tmp22 = el11;
+	var doc12 = null;
+	if(null == doc12) {
+		doc12 = window.document;
+	}
+	var el12 = doc12.createElement("div");
+	var _g30 = 0;
+	var _g115 = [{ value : "pane middle right", name : "class"}];
+	while(_g30 < _g115.length) {
+		var o12 = _g115[_g30];
+		++_g30;
+		el12.setAttribute(o12.name,o12.value);
+	}
+	var attrs12 = null;
+	if(null != attrs12) {
+		var tmp23 = attrs12.keys();
+		while(tmp23.hasNext()) {
+			var attr12 = tmp23.next();
+			el12.setAttribute(attr12,__map_reserved[attr12] != null?attrs12.getReserved(attr12):attrs12.h[attr12]);
+		}
+	}
+	var children11 = null;
+	if(null != children11) {
+		var _g31 = 0;
+		while(_g31 < children11.length) {
+			var child11 = children11[_g31];
+			++_g31;
+			el12.appendChild(child11);
+		}
+	}
+	var textContent11 = null;
+	if(null != textContent11) {
+		el12.appendChild(doc12.createTextNode(textContent11));
+	}
+	var tmp24 = el12;
+	var doc13 = null;
+	if(null == doc13) {
+		doc13 = window.document;
+	}
+	var el13 = doc13.createElement("div");
+	var _g32 = 0;
+	var _g116 = [{ value : "pane bottom left", name : "class"}];
+	while(_g32 < _g116.length) {
+		var o13 = _g116[_g32];
+		++_g32;
+		el13.setAttribute(o13.name,o13.value);
+	}
+	var attrs13 = null;
+	if(null != attrs13) {
+		var tmp25 = attrs13.keys();
+		while(tmp25.hasNext()) {
+			var attr13 = tmp25.next();
+			el13.setAttribute(attr13,__map_reserved[attr13] != null?attrs13.getReserved(attr13):attrs13.h[attr13]);
+		}
+	}
+	var children12 = null;
+	if(null != children12) {
+		var _g33 = 0;
+		while(_g33 < children12.length) {
+			var child12 = children12[_g33];
+			++_g33;
+			el13.appendChild(child12);
+		}
+	}
+	var textContent12 = null;
+	if(null != textContent12) {
+		el13.appendChild(doc13.createTextNode(textContent12));
+	}
+	var tmp26 = el13;
+	var doc14 = null;
+	if(null == doc14) {
+		doc14 = window.document;
+	}
+	var el14 = doc14.createElement("div");
+	var _g34 = 0;
+	var _g117 = [{ value : "pane bottom center", name : "class"}];
+	while(_g34 < _g117.length) {
+		var o14 = _g117[_g34];
+		++_g34;
+		el14.setAttribute(o14.name,o14.value);
+	}
+	var attrs14 = null;
+	if(null != attrs14) {
+		var tmp27 = attrs14.keys();
+		while(tmp27.hasNext()) {
+			var attr14 = tmp27.next();
+			el14.setAttribute(attr14,__map_reserved[attr14] != null?attrs14.getReserved(attr14):attrs14.h[attr14]);
+		}
+	}
+	var children13 = null;
+	if(null != children13) {
+		var _g35 = 0;
+		while(_g35 < children13.length) {
+			var child13 = children13[_g35];
+			++_g35;
+			el14.appendChild(child13);
+		}
+	}
+	var textContent13 = null;
+	if(null != textContent13) {
+		el14.appendChild(doc14.createTextNode(textContent13));
+	}
+	var tmp28 = el14;
+	var doc15 = null;
+	if(null == doc15) {
+		doc15 = window.document;
+	}
+	var el15 = doc15.createElement("div");
+	var _g36 = 0;
+	var _g118 = [{ value : "pane bottom right", name : "class"}];
+	while(_g36 < _g118.length) {
+		var o15 = _g118[_g36];
+		++_g36;
+		el15.setAttribute(o15.name,o15.value);
+	}
+	var attrs15 = null;
+	if(null != attrs15) {
+		var tmp29 = attrs15.keys();
+		while(tmp29.hasNext()) {
+			var attr15 = tmp29.next();
+			el15.setAttribute(attr15,__map_reserved[attr15] != null?attrs15.getReserved(attr15):attrs15.h[attr15]);
+		}
+	}
+	var children14 = null;
+	if(null != children14) {
+		var _g37 = 0;
+		while(_g37 < children14.length) {
+			var child14 = children14[_g37];
+			++_g37;
+			el15.appendChild(child14);
+		}
+	}
+	var textContent14 = null;
+	if(null != textContent14) {
+		el15.appendChild(doc15.createTextNode(textContent14));
+	}
+	var children15 = [tmp2,tmp4,tmp6,tmp8,tmp10,tmp12,tmp14,tmp16,tmp18,tmp20,tmp22,tmp24,tmp26,tmp28,el15];
+	if(null != children15) {
+		var _g38 = 0;
+		while(_g38 < children15.length) {
+			var child15 = children15[_g38];
+			++_g38;
+			el.appendChild(child15);
+		}
+	}
+	var textContent15 = null;
+	if(null != textContent15) {
+		el.appendChild(doc.createTextNode(textContent15));
+	}
+	this.el = el;
 	dots_Dom.append(parent,this.el);
 	this.scrollerV = dots_Query.find(".scroller-v",this.el);
 	this.scrollerH = dots_Query.find(".scroller-h",this.el);
@@ -1827,7 +2870,7 @@ var fancy_core_Grid9 = function(parent,options) {
 			t3 = _13;
 		}
 	}
-	var tmp = t3 != null?t3:0;
+	var tmp30 = t3 != null?t3:0;
 	var _04 = options;
 	var t4;
 	if(null == _04) {
@@ -1840,7 +2883,7 @@ var fancy_core_Grid9 = function(parent,options) {
 			t4 = _14;
 		}
 	}
-	var tmp1 = t4 != null?t4:0;
+	var tmp31 = t4 != null?t4:0;
 	var _05 = options;
 	var t5;
 	if(null == _05) {
@@ -1853,7 +2896,7 @@ var fancy_core_Grid9 = function(parent,options) {
 			t5 = _15;
 		}
 	}
-	var tmp2 = t5 != null?t5:0;
+	var tmp32 = t5 != null?t5:0;
 	var _06 = options;
 	var t6;
 	if(null == _06) {
@@ -1866,7 +2909,7 @@ var fancy_core_Grid9 = function(parent,options) {
 			t6 = _16;
 		}
 	}
-	this.sizeRails(tmp,tmp1,tmp2,t6 != null?t6:0);
+	this.sizeRails(tmp30,tmp31,tmp32,t6 != null?t6:0);
 	this.refresh();
 	window.addEventListener("resize",function(_) {
 		var s = _gthis.getGridSizeFromContainer();

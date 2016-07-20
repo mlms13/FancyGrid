@@ -65,7 +65,7 @@ class Grid {
   public function new(parent : Element, options : GridOptions) {
     var fancyGrid = Dom.create("div.fancy-grid");
     parent.append(fancyGrid);
-    view = Dom.create("div.view", []);
+    view = Dom.create("div.view");
     fancyGrid.append(view);
 
     render = options.render;
@@ -227,7 +227,9 @@ class Grid {
     var k = '$row-$col';
     var el = cacheElement.get(k);
     if(null == el) {
-      el = Dom.create('div.cell.row-$row.col-$col', [render(row, col)]);
+      el = js.Browser.document.createElement("div");
+      el.className = 'cell row-$row col-$col';
+      el.appendChild(render(row, col));
       cacheElement.set(k, el);
     }
     return el;

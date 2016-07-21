@@ -4,11 +4,17 @@
 -dce full
 
 --each
--cp demo
--main Main
--js demo/www/bundle.js
 
---next
 -D shallow-expose
 fancy.Grid
 -js dist/fancygrid.js
+
+--next
+-lib utest
+-js testbin/index.js
+-D phantomjs
+-dce no
+-cp test
+-main TestAll
+
+-cmd phantomjs testbin/phantom.js

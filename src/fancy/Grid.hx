@@ -3,6 +3,8 @@ package fancy;
 import js.html.Element;
 import fancy.core.*;
 using dots.Dom;
+import fancy.core.IntCache;
+import fancy.core.PositionCache;
 using fancy.core.Lazy;
 using fancy.core.Search;
 using thx.Nulls;
@@ -60,7 +62,7 @@ class Grid {
   var bottomRailSize: Float;
   var rightRailSize: Float;
 
-  var cacheElement: Map<String, Element> = new Map();
+  var cacheElement: PositionCache<Element> = new PositionCache();
 
   public function new(parent : Element, options : GridOptions) {
     var fancyGrid = Dom.create("div.fancy-grid");
@@ -133,31 +135,30 @@ class Grid {
 
   function assignVSize(f: Int -> Float): Int -> Float {
     if(null != f) return f;
-    var cache = new Map();
+    var cache = new IntCache();
     return function(row) {
       if(cache.exists(row))
         return cache.get(row);
       var v = 0.0;
       // test left shoulder and first content cell
+      var els: Array<Element> = [], el;
       for(i in 0...(fixedLeft + 1).max(2)) {
-        // render cell in view
-        var el = renderAt(row, i);
+        el = renderAt(row, i);
+        els.push(el);
         view.append(el);
-        // get measure
-        v = v.max(el.getOuterHeight());
-        // remove cell
-        view.removeChild(el);
       }
       // test last content cell and right shoulder
       for(i in columns - fixedRight - 1...columns) {
-        // render cell in view
-        var el = renderAt(row, i);
+        el = renderAt(row, i);
+        els.push(el);
         view.append(el);
-        // get measure
-        v = v.max(el.getOuterHeight());
-        // remove cell
-        view.removeChild(el);
       }
+      // get measure
+      for(el in els)
+        v = v.max(el.getOuterHeight());
+
+      for(el in els)
+        view.removeChild(el);
       cache.set(row, v);
       return v;
     };
@@ -165,31 +166,29 @@ class Grid {
 
   function assignHSize(f: Int -> Float): Int -> Float {
     if(null != f) return f;
-    var cache = new Map();
+    var cache = new IntCache();
     return function(col) {
       if(cache.exists(col))
         return cache.get(col);
       var v = 0.0;
       // test headers and first content cell
+      var els: Array<Element> = [], el;
       for(i in 0...(fixedTop + 1).max(2)) {
-        // render cell in view
-        var el = renderAt(i, col);
+        el = renderAt(i, col);
+        els.push(el);
         view.append(el);
-        // get measure
-        v = v.max(el.getOuterWidth());
-        // remove cell
-        view.removeChild(el);
       }
       // test last content cell and footer
       for(i in rows - fixedBottom - 1...rows) {
-        // render cell in view
-        var el = renderAt(i, col);
+        el = renderAt(i, col);
+        els.push(el);
         view.append(el);
-        // get measure
-        v = v.max(el.getOuterWidth());
-        // remove cell
-        view.removeChild(el);
       }
+      for(el in els)
+        v = v.max(el.getOuterWidth());
+
+      for(el in els)
+        view.removeChild(el);
       cache.set(col, v);
       return v;
     };
@@ -197,7 +196,7 @@ class Grid {
 
   function assignVOffset(f: Int -> Float): Int -> Float {
     if(null != f) return f;
-    var cache = new Map();
+    var cache = new IntCache();
     return function(row) {
       if(row == 0)
         return 0;
@@ -211,7 +210,7 @@ class Grid {
 
   function assignHOffset(f: Int -> Float): Int -> Float {
     if(null != f) return f;
-    var cache = new Map();
+    var cache = new IntCache();
     return function(col) {
       if(col == 0)
         return 0;
@@ -224,13 +223,12 @@ class Grid {
   }
 
   function renderAt(row: Int, col: Int) {
-    var k = '$row-$col';
-    var el = cacheElement.get(k);
+    var el = cacheElement.get(row, col);
     if(null == el) {
       el = js.Browser.document.createElement("div");
       el.className = 'cell row-$row col-$col';
       el.appendChild(render(row, col));
-      cacheElement.set(k, el);
+      cacheElement.set(row, col, el);
     }
     return el;
   }

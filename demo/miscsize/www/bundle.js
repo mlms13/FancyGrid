@@ -1375,7 +1375,7 @@ dots_Style.style = function(el) {
 	return el.ownerDocument.defaultView.getComputedStyle(el,null);
 };
 var fancy_Grid = function(parent,options) {
-	this.cacheElement = new haxe_ds_StringMap();
+	this.cacheElement = new fancy_core_PositionCache();
 	var _gthis = this;
 	var doc = null;
 	if(null == doc) {
@@ -1577,30 +1577,42 @@ fancy_Grid.prototype = {
 		if(null != f) {
 			return f;
 		}
-		var cache = new haxe_ds_IntMap();
+		var cache = new fancy_core_IntCache();
 		return function(row) {
-			if(cache.h.hasOwnProperty(row)) {
-				return cache.h[row];
+			if(cache.cache[row] != null) {
+				return cache.cache[row];
 			}
 			var v = 0.0;
+			var els = [];
+			var el;
 			var _g1 = 0;
 			var a = _gthis.fixedLeft + 1;
 			var _g = a > 2?a:2;
 			while(_g1 < _g) {
-				var el = _gthis.renderAt(row,_g1++);
+				el = _gthis.renderAt(row,_g1++);
+				els.push(el);
 				dots_Dom.append(_gthis.view,el);
-				v = Math.max(v,el.offsetHeight);
-				_gthis.view.removeChild(el);
 			}
 			var _g11 = _gthis.columns - _gthis.fixedRight - 1;
 			var _g2 = _gthis.columns;
 			while(_g11 < _g2) {
-				var el1 = _gthis.renderAt(row,_g11++);
-				dots_Dom.append(_gthis.view,el1);
-				v = Math.max(v,el1.offsetHeight);
-				_gthis.view.removeChild(el1);
+				el = _gthis.renderAt(row,_g11++);
+				els.push(el);
+				dots_Dom.append(_gthis.view,el);
 			}
-			cache.h[row] = v;
+			var _g3 = 0;
+			while(_g3 < els.length) {
+				var el1 = els[_g3];
+				++_g3;
+				v = Math.max(v,el1.offsetHeight);
+			}
+			var _g4 = 0;
+			while(_g4 < els.length) {
+				var el2 = els[_g4];
+				++_g4;
+				_gthis.view.removeChild(el2);
+			}
+			cache.cache[row] = v;
 			return v;
 		};
 	}
@@ -1609,30 +1621,42 @@ fancy_Grid.prototype = {
 		if(null != f) {
 			return f;
 		}
-		var cache = new haxe_ds_IntMap();
+		var cache = new fancy_core_IntCache();
 		return function(col) {
-			if(cache.h.hasOwnProperty(col)) {
-				return cache.h[col];
+			if(cache.cache[col] != null) {
+				return cache.cache[col];
 			}
 			var v = 0.0;
+			var els = [];
+			var el;
 			var _g1 = 0;
 			var a = _gthis.fixedTop + 1;
 			var _g = a > 2?a:2;
 			while(_g1 < _g) {
-				var el = _gthis.renderAt(_g1++,col);
+				el = _gthis.renderAt(_g1++,col);
+				els.push(el);
 				dots_Dom.append(_gthis.view,el);
-				v = Math.max(v,el.offsetWidth);
-				_gthis.view.removeChild(el);
 			}
 			var _g11 = _gthis.rows - _gthis.fixedBottom - 1;
 			var _g2 = _gthis.rows;
 			while(_g11 < _g2) {
-				var el1 = _gthis.renderAt(_g11++,col);
-				dots_Dom.append(_gthis.view,el1);
-				v = Math.max(v,el1.offsetWidth);
-				_gthis.view.removeChild(el1);
+				el = _gthis.renderAt(_g11++,col);
+				els.push(el);
+				dots_Dom.append(_gthis.view,el);
 			}
-			cache.h[col] = v;
+			var _g3 = 0;
+			while(_g3 < els.length) {
+				var el1 = els[_g3];
+				++_g3;
+				v = Math.max(v,el1.offsetWidth);
+			}
+			var _g4 = 0;
+			while(_g4 < els.length) {
+				var el2 = els[_g4];
+				++_g4;
+				_gthis.view.removeChild(el2);
+			}
+			cache.cache[col] = v;
 			return v;
 		};
 	}
@@ -1641,16 +1665,16 @@ fancy_Grid.prototype = {
 		if(null != f) {
 			return f;
 		}
-		var cache = new haxe_ds_IntMap();
+		var cache = new fancy_core_IntCache();
 		return function(row) {
 			if(row == 0) {
 				return 0;
 			}
-			if(cache.h.hasOwnProperty(row)) {
-				return cache.h[row];
+			if(cache.cache[row] != null) {
+				return cache.cache[row];
 			}
 			var v = _gthis.vOffset(row - 1) + _gthis.vSize(row - 1);
-			cache.h[row] = v;
+			cache.cache[row] = v;
 			return v;
 		};
 	}
@@ -1659,33 +1683,26 @@ fancy_Grid.prototype = {
 		if(null != f) {
 			return f;
 		}
-		var cache = new haxe_ds_IntMap();
+		var cache = new fancy_core_IntCache();
 		return function(col) {
 			if(col == 0) {
 				return 0;
 			}
-			if(cache.h.hasOwnProperty(col)) {
-				return cache.h[col];
+			if(cache.cache[col] != null) {
+				return cache.cache[col];
 			}
 			var v = _gthis.hOffset(col - 1) + _gthis.hSize(col - 1);
-			cache.h[col] = v;
+			cache.cache[col] = v;
 			return v;
 		};
 	}
 	,renderAt: function(row,col) {
-		var k = "" + row + "-" + col;
-		var _this = this.cacheElement;
-		var el = __map_reserved[k] != null?_this.getReserved(k):_this.h[k];
+		var el = this.cacheElement.get(row,col);
 		if(null == el) {
 			el = window.document.createElement("div");
 			el.className = "cell row-" + row + " col-" + col;
 			el.appendChild(this.render(row,col));
-			var _this1 = this.cacheElement;
-			if(__map_reserved[k] != null) {
-				_this1.setReserved(k,el);
-			} else {
-				_this1.h[k] = el;
-			}
+			this.cacheElement.set(row,col,el);
 		}
 		return el;
 	}
@@ -3169,6 +3186,35 @@ fancy_core_Grid9.prototype = {
 	}
 	,__class__: fancy_core_Grid9
 };
+var fancy_core_IntCache = function() {
+	this.cache = [];
+};
+fancy_core_IntCache.__name__ = ["fancy","core","IntCache"];
+fancy_core_IntCache.prototype = {
+	cache: null
+	,get: function(index) {
+		return this.cache[index];
+	}
+	,set: function(index,value) {
+		this.cache[index] = value;
+	}
+	,exists: function(index) {
+		return this.cache[index] != null;
+	}
+	,getOrCreate: function(index,handler) {
+		if(this.cache[index] == null) {
+			this.cache[index] = handler(index);
+		}
+		return this.cache[index];
+	}
+	,invalidate: function() {
+		this.cache = [];
+	}
+	,invalidateAfter: function(index) {
+		this.cache = this.cache.splice(0,index);
+	}
+	,__class__: fancy_core_IntCache
+};
 var fancy_core__$Lazy_Lazy_$Impl_$ = {};
 fancy_core__$Lazy_Lazy_$Impl_$.__name__ = ["fancy","core","_Lazy","Lazy_Impl_"];
 fancy_core__$Lazy_Lazy_$Impl_$.get_value = function(this1) {
@@ -3253,6 +3299,43 @@ fancy_core_LazyFloatExtensions.max = function(l1,l2) {
 	return function() {
 		return Math.max(l1(),l2());
 	};
+};
+var fancy_core_PositionCache = function() {
+	this.cache = [];
+};
+fancy_core_PositionCache.__name__ = ["fancy","core","PositionCache"];
+fancy_core_PositionCache.prototype = {
+	cache: null
+	,get: function(row,col) {
+		var r = this.cache[row];
+		if(null == r) {
+			return null;
+		}
+		return r[col];
+	}
+	,set: function(row,col,value) {
+		var r = this.cache[row];
+		if(null == r) {
+			r = this.cache[row] = [];
+		}
+		r[col] = value;
+	}
+	,exists: function(row,col) {
+		return this.get(row,col) != null;
+	}
+	,getOrCreate: function(row,col,handler) {
+		if(this.exists(row,col)) {
+			return this.get(row,col);
+		} else {
+			var v = handler(row,col);
+			this.set(row,col,v);
+			return v;
+		}
+	}
+	,invalidate: function() {
+		this.cache = [];
+	}
+	,__class__: fancy_core_PositionCache
 };
 var fancy_core_ScrollerDimensions = function(opt) {
 	var _gthis = this;

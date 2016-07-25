@@ -1375,6 +1375,7 @@ dots_Style.style = function(el) {
 	return el.ownerDocument.defaultView.getComputedStyle(el,null);
 };
 var fancy_Grid = function(parent,options) {
+	this.caches = [];
 	this.cacheElement = new fancy_core_PositionCache();
 	var _gthis = this;
 	var doc = null;
@@ -1447,6 +1448,7 @@ var fancy_Grid = function(parent,options) {
 	}
 	this.view = el1;
 	dots_Dom.append(fancyGrid,this.view);
+	this.caches.push(this.cacheElement);
 	this.render = options.render;
 	this.vOffset = this.assignVOffset(options.vOffset);
 	this.hOffset = this.assignHOffset(options.hOffset);
@@ -1572,12 +1574,32 @@ fancy_Grid.prototype = {
 	,bottomRailSize: null
 	,rightRailSize: null
 	,cacheElement: null
+	,caches: null
+	,setRowsAndColumns: function(rows,columns) {
+		this.rows = rows;
+		this.columns = columns;
+		this.invalidateCache();
+		this.renderCorners();
+		this.renderMiddle(this.grid9.position.y);
+		this.renderCenter(this.grid9.position.x);
+		this.renderMain(this.grid9.position.x,this.grid9.position.y);
+	}
+	,invalidateCache: function() {
+		var _g = 0;
+		var _g1 = this.caches;
+		while(_g < _g1.length) {
+			var cache = _g1[_g];
+			++_g;
+			cache.invalidate();
+		}
+	}
 	,assignVSize: function(f) {
 		var _gthis = this;
 		if(null != f) {
 			return f;
 		}
 		var cache = new fancy_core_IntCache();
+		this.caches.push(cache);
 		return function(row) {
 			if(cache.cache[row] != null) {
 				return cache.cache[row];
@@ -1622,6 +1644,7 @@ fancy_Grid.prototype = {
 			return f;
 		}
 		var cache = new fancy_core_IntCache();
+		this.caches.push(cache);
 		return function(col) {
 			if(cache.cache[col] != null) {
 				return cache.cache[col];
@@ -1666,6 +1689,7 @@ fancy_Grid.prototype = {
 			return f;
 		}
 		var cache = new fancy_core_IntCache();
+		this.caches.push(cache);
 		return function(row) {
 			if(row == 0) {
 				return 0;
@@ -1684,6 +1708,7 @@ fancy_Grid.prototype = {
 			return f;
 		}
 		var cache = new fancy_core_IntCache();
+		this.caches.push(cache);
 		return function(col) {
 			if(col == 0) {
 				return 0;

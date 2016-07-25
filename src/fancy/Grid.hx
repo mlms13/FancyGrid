@@ -12,9 +12,6 @@ using thx.Floats;
 using thx.Ints;
 using thx.Iterators;
 
-// TODO
-// - snap to cell
-
 typedef GridOptions = {
   render: Int -> Int -> Element,
   ?vOffset: Int -> Float,
@@ -28,6 +25,10 @@ typedef GridOptions = {
   ?fixedTop: Int,
   ?fixedBottom: Int
 };
+
+typedef InvalidatableCache = {
+  public function invalidate() : Void;
+}
 
 class Grid {
   var topLeft: Element;
@@ -64,11 +65,15 @@ class Grid {
 
   var cacheElement: PositionCache<Element> = new PositionCache();
 
+  var caches : Array<InvalidatableCache> = [];
+
   public function new(parent : Element, options : GridOptions) {
     var fancyGrid = Dom.create("div.fancy-grid");
     parent.append(fancyGrid);
     view = Dom.create("div.view");
     fancyGrid.append(view);
+
+    caches.push(cacheElement);
 
     render = options.render;
     vOffset = assignVOffset(options.vOffset);
@@ -133,9 +138,25 @@ class Grid {
     renderMain(0, 0);
   }
 
+  public function setRowsAndColumns(rows : Int, columns : Int) {
+    this.rows = rows;
+    this.columns = columns;
+    invalidateCache();
+    renderCorners();
+    renderMiddle(grid9.position.y);
+    renderCenter(grid9.position.x);
+    renderMain(grid9.position.x, grid9.position.y);
+  }
+
+  function invalidateCache() {
+    for(cache in caches)
+      cache.invalidate();
+  }
+
   function assignVSize(f: Int -> Float): Int -> Float {
     if(null != f) return f;
     var cache = new IntCache();
+    caches.push(cache);
     return function(row) {
       if(cache.exists(row))
         return cache.get(row);
@@ -167,6 +188,7 @@ class Grid {
   function assignHSize(f: Int -> Float): Int -> Float {
     if(null != f) return f;
     var cache = new IntCache();
+    caches.push(cache);
     return function(col) {
       if(cache.exists(col))
         return cache.get(col);
@@ -197,6 +219,7 @@ class Grid {
   function assignVOffset(f: Int -> Float): Int -> Float {
     if(null != f) return f;
     var cache = new IntCache();
+    caches.push(cache);
     return function(row) {
       if(row == 0)
         return 0;
@@ -211,6 +234,7 @@ class Grid {
   function assignHOffset(f: Int -> Float): Int -> Float {
     if(null != f) return f;
     var cache = new IntCache();
+    caches.push(cache);
     return function(col) {
       if(col == 0)
         return 0;

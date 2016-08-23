@@ -1,0 +1,4 @@
+-lib thx.benchmark
+-main ArrayVsMapCache
+-js arrayvsmapcache.js
+-cmd node arrayvsmapcache.js

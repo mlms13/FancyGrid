@@ -1,0 +1,4 @@
+-lib thx.benchmark
+-main StringVsArrayCache
+-js stringvsarraycache.js
+-cmd node stringvsarraycache.js

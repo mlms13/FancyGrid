@@ -23,7 +23,10 @@ typedef GridOptions = {
   ?fixedLeft: Int,
   ?fixedRight: Int,
   ?fixedTop: Int,
-  ?fixedBottom: Int
+  ?fixedBottom: Int,
+  ?scrollerMinSize: Float,
+  ?scrollerMaxSize: Float,
+  ?scrollerSize: Float,
 };
 
 typedef InvalidatableCache = {
@@ -96,10 +99,12 @@ class Grid {
     bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
 
+    var scrollerSize = options.scrollerSize.or(10);
+
     grid9 = new Grid9(view, {
-      scrollerMinSize : 20.0,
-      scrollerMaxSize : 160.0,
-      scrollerSize : 10,
+      scrollerMinSize : options.scrollerMinSize.or(scrollerSize),
+      scrollerMaxSize : options.scrollerMaxSize,
+      scrollerSize : scrollerSize,
       contentWidth : contentWidth,
       contentHeight : contentHeight,
       topRail : topRailSize,

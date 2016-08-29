@@ -82,7 +82,7 @@ class Grid {
     vOffset = assignVOffset(options.vOffset);
     hOffset = assignHOffset(options.hOffset);
     vSize = assignVSize(options.vSize);
-    hSize = assignHSize(options.hSize);
+    hSize = options.hSize != null ? options.hSize : assignHSize();
     rows = options.rows;
     columns = options.columns;
 
@@ -190,32 +190,35 @@ class Grid {
     };
   }
 
-  function assignHSize(f: Int -> Float): Int -> Float {
-    if(null != f) return f;
+  function assignHSize(): Int -> Float {
     var cache = new IntCache();
     caches.push(cache);
-    return function(col) {
+
+    return function(col: Int) {
       if(cache.exists(col))
         return cache.get(col);
+
       var v = 0.0;
-      // test headers and first content cell
       var els: Array<Element> = [], el;
-      for(i in 0...(fixedTop + 1).max(2)) {
-        el = renderAt(i, col);
-        els.push(el);
-        view.append(el);
+
+      for (i in 0...rows) {
+        // render each row that is in the fixed top, or the first row after
+        // fixed top, or the last row before fixed bottom, or in fixed bottom
+        if (i < fixedTop + 1 || i > rows - fixedBottom - 1) {
+          el = renderAt(i, col);
+          els.push(el);
+          view.append(el);
+        }
       }
-      // test last content cell and footer
-      for(i in rows - fixedBottom - 1...rows) {
-        el = renderAt(i, col);
-        els.push(el);
-        view.append(el);
-      }
+
+      // measure with width of each element
       for(el in els)
         v = v.max(el.getOuterWidth());
 
+      // then remove all of the elements (separate from measuring, for speed)
       for(el in els)
         view.removeChild(el);
+
       cache.set(col, v);
       return v;
     };

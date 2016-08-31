@@ -312,8 +312,11 @@ class Grid9 {
   }
 
   public function sizeRails(topRail: Float, bottomRail: Float, leftRail: Float, rightRail: Float) {
-    if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail)
-      return;
+    // FIXME: i commented out the early return because sometimes this function
+    // was the only way i could find to reset px width/height. i don't actually
+    // want to change the rails.
+    // if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail)
+    //   return;
     dirty = true;
     this.topRail = topRail;
     this.bottomRail = bottomRail;

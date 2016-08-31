@@ -147,10 +147,23 @@ class Grid {
     this.rows = rows;
     this.columns = columns;
     invalidateCache();
+
+    // recalculate sizes with the new content, and update grid9
+    var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
+    var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
+
+    topRailSize = vOffset(fixedTop);
+    leftRailSize = hOffset(fixedLeft);
+    bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
+    rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
+    grid9.resizeContent(contentWidth, contentHeight);
+    grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
+
     renderCorners();
     renderMiddle(grid9.position.y);
     renderCenter(grid9.position.x);
     renderMain(grid9.position.x, grid9.position.y);
+    grid9.refresh();
   }
 
   function invalidateCache() {

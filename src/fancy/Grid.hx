@@ -165,6 +165,7 @@ class Grid {
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
     grid9.resizeContent(contentWidth, contentHeight);
     grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
+    grid9.setPosition(grid9.position.x, grid9.position.y);
 
     renderCorners();
     renderMiddle(grid9.position.y);
@@ -362,7 +363,7 @@ class Grid {
   }
 
   function renderMiddle(v: Float) {
-    var r = Search.binary(0, rows, rowComparator(v + topRailSize)).max(fixedTop);
+    var r = Search.binary(0, rows - 1, rowComparator(v + topRailSize)).max(fixedTop);
     var top = vOffset(r);
     var limit = top + vSize(r) + grid9.gridMiddleHeight;
 
@@ -391,7 +392,7 @@ class Grid {
   }
 
   function renderCenter(v: Float) {
-    var c = Search.binary(0, columns, columnComparator(v + leftRailSize)).max(fixedLeft);
+    var c = Search.binary(0, columns - 1, columnComparator(v + leftRailSize)).max(fixedLeft);
     var left = hOffset(c);
     var limit = left + hSize(c) + grid9.gridCenterWidth;
 
@@ -419,8 +420,8 @@ class Grid {
   }
 
   function renderMain(x: Float, y: Float) {
-    var r = Search.binary(0, rows, rowComparator(y + topRailSize)).max(fixedTop);
-    var c = Search.binary(0, columns, columnComparator(x + leftRailSize)).max(fixedLeft);
+    var r = Search.binary(0, rows - 1, rowComparator(y + topRailSize)).max(fixedTop);
+    var c = Search.binary(0, columns - 1, columnComparator(x + leftRailSize)).max(fixedLeft);
 
     var left = hOffset(c);
     var top = vOffset(r);

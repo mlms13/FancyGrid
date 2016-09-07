@@ -12,12 +12,19 @@ using thx.Floats;
 using thx.Ints;
 using thx.Iterators;
 
+enum CellDimension {
+  Fixed(v: Float);
+  RenderFirst;
+  RenderSmart; // renders more cells, may be slower
+  RenderAll; // renders all cells. definitely slower.
+}
+
 typedef GridOptions = {
   render: Int -> Int -> Element,
   ?vOffset: Int -> Float,
   ?hOffset: Int -> Float,
-  ?vSize: Int -> Float,
-  ?hSize: Int -> Float,
+  ?vSize: Int -> CellDimension,
+  ?hSize: Int -> CellDimension,
   columns: Int,
   rows: Int,
   ?fixedLeft: Int,
@@ -81,8 +88,8 @@ class Grid {
     render = options.render;
     vOffset = assignVOffset(options.vOffset);
     hOffset = assignHOffset(options.hOffset);
-    vSize = assignVSize(options.vSize);
-    hSize = options.hSize != null ? options.hSize : assignHSize();
+    vSize = assignVSize(options.vSize != null ? options.vSize : function (_) return RenderSmart);
+    hSize = assignHSize(options.hSize != null ? options.hSize : function (_) return RenderSmart);
     rows = options.rows;
     columns = options.columns;
 
@@ -171,69 +178,135 @@ class Grid {
       cache.invalidate();
   }
 
-  function assignVSize(f: Int -> Float): Int -> Float {
-    if(null != f) return f;
+  function assignVSize(f: Int -> CellDimension): Int -> Float {
     var cache = new IntCache();
     caches.push(cache);
+
     return function(row) {
       if(cache.exists(row))
         return cache.get(row);
-      var v = 0.0;
-      // test left shoulder and first content cell
-      var els: Array<Element> = [], el;
-      for(i in 0...(fixedLeft + 1).max(2)) {
-        el = renderAt(row, i);
-        els.push(el);
-        view.append(el);
-      }
-      // test last content cell and right shoulder
-      for(i in columns - fixedRight - 1...columns) {
-        el = renderAt(row, i);
-        els.push(el);
-        view.append(el);
-      }
-      // get measure
-      for(el in els)
-        v = v.max(el.getOuterHeight());
 
-      for(el in els)
-        view.removeChild(el);
-      cache.set(row, v);
-      return v;
+      var v = 0.0;
+      var vCalculated = switch f(row) {
+        case Fixed(val): val;
+        case RenderSmart:
+          // test left shoulder and first content cell
+          var els: Array<Element> = [], el;
+          var leftBound = (fixedLeft + 1).max(2).min(columns);
+          for(i in 0...leftBound) {
+            el = renderAt(row, i);
+            els.push(el);
+            view.append(el);
+          }
+          // test last content cell and right shoulder
+          var rightBound = (columns - fixedRight - 1).max(leftBound + 1);
+          for(i in rightBound...columns) {
+            el = renderAt(row, i);
+            els.push(el);
+            view.append(el);
+          }
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterHeight());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+        case RenderFirst:
+          // test left shoulder and first content cell
+          var el = renderAt(row, 0);
+          view.append(el);
+
+          // get measure
+          v = v.max(el.getOuterHeight());
+          view.removeChild(el);
+          v;
+        case RenderAll:
+          var els = [], el;
+          for (i in 0...columns) {
+            el = renderAt(row, i);
+
+            els.push(el);
+            view.append(el);
+          }
+
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterHeight());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+      }
+
+      cache.set(row, vCalculated);
+      return vCalculated;
     };
   }
 
-  function assignHSize(): Int -> Float {
+  function assignHSize(f: Int -> CellDimension): Int -> Float {
     var cache = new IntCache();
     caches.push(cache);
 
-    return function(col: Int) {
+    return function(col) {
       if(cache.exists(col))
         return cache.get(col);
 
       var v = 0.0;
-      var els: Array<Element> = [], el;
+      var vCalculated = switch f(col) {
+        case Fixed(val): val;
+        case RenderSmart:
+          // test left shoulder and first content cell
+          var els: Array<Element> = [], el;
+          var topBound = (fixedTop + 1).max(2).min(rows);
+          for(i in 0...topBound) {
+            el = renderAt(i, col);
+            els.push(el);
+            view.append(el);
+          }
+          // test last content cell and right shoulder
+          var bottomBound = (rows - fixedBottom - 1).max(topBound + 1);
+          for(i in bottomBound...rows) {
+            el = renderAt(i, col);
+            els.push(el);
+            view.append(el);
+          }
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterWidth());
 
-      for (i in 0...rows) {
-        // render each row that is in the fixed top, or the first row after
-        // fixed top, or the last row before fixed bottom, or in fixed bottom
-        if (i < fixedTop + 1 || i > rows - fixedBottom - 1) {
-          el = renderAt(i, col);
-          els.push(el);
+          for(el in els)
+            view.removeChild(el);
+          v;
+        case RenderFirst:
+          // test left shoulder and first content cell
+          var el = renderAt(0, col);
           view.append(el);
-        }
+
+          // get measure
+          v = v.max(el.getOuterWidth());
+          view.removeChild(el);
+          v;
+        case RenderAll:
+          var els = [], el;
+          for (i in 0...rows) {
+            el = renderAt(i, col);
+
+            els.push(el);
+            view.append(el);
+          }
+
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterWidth());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
       }
 
-      // measure with width of each element
-      for(el in els)
-        v = v.max(el.getOuterWidth());
-
-      // then remove all of the elements (separate from measuring, for speed)
-      for(el in els)
-        view.removeChild(el);
-
-      cache.set(col, v);
-      return v;
+      cache.set(col, vCalculated);
+      return vCalculated;
     };
   }
 

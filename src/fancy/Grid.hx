@@ -88,8 +88,8 @@ class Grid {
     render = options.render;
     vOffset = assignVOffset(options.vOffset);
     hOffset = assignHOffset(options.hOffset);
-    vSize = assignVSize(options.vSize != null ? options.vSize : function (_) return RenderSmart);
     hSize = assignHSize(options.hSize != null ? options.hSize : function (_) return RenderSmart);
+    vSize = assignVSize(options.vSize != null ? options.vSize : function (_) return RenderSmart);
     rows = options.rows;
     columns = options.columns;
 
@@ -195,16 +195,14 @@ class Grid {
           var els: Array<Element> = [], el;
           var leftBound = (fixedLeft + 1).max(2).min(columns);
           for(i in 0...leftBound) {
-            el = renderAt(row, i);
+            el = renderWithWidth(view, row, i);
             els.push(el);
-            view.append(el);
           }
           // test last content cell and right shoulder
           var rightBound = (columns - fixedRight - 1).max(leftBound + 1);
           for(i in rightBound...columns) {
-            el = renderAt(row, i);
+            el = renderWithWidth(view, row, i);
             els.push(el);
-            view.append(el);
           }
           // get measure
           for(el in els)
@@ -215,8 +213,7 @@ class Grid {
           v;
         case RenderFirst:
           // test left shoulder and first content cell
-          var el = renderAt(row, 0);
-          view.append(el);
+          var el = renderWithWidth(view, row, 0);
 
           // get measure
           v = v.max(el.getOuterHeight());
@@ -225,10 +222,9 @@ class Grid {
         case RenderAll:
           var els = [], el;
           for (i in 0...columns) {
-            el = renderAt(row, i);
+            el = renderWithWidth(view, row, i);
 
             els.push(el);
-            view.append(el);
           }
 
           // get measure
@@ -359,6 +355,13 @@ class Grid {
     el.style.left = '${hOffset(col)}px';
     el.style.width = '${hSize(col)}px';
     el.style.height = '${vSize(row)}px';
+    return el;
+  }
+
+  function renderWithWidth(parent: Element, row: Int, col: Int) {
+    var el = renderAt(row, col);
+    parent.append(el);
+    el.style.width = '${hSize(col)}px';
     return el;
   }
 

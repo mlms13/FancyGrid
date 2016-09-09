@@ -98,26 +98,14 @@ class Grid {
     fixedTop = options.fixedTop.or(0);
     fixedBottom = options.fixedBottom.or(0);
 
-    var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
-    var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
-
-    topRailSize = vOffset(fixedTop);
-    leftRailSize = hOffset(fixedLeft);
-    bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
-    rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
-
     var scrollerSize = options.scrollerSize.or(10);
 
     grid9 = new Grid9(view, {
       scrollerMinSize : options.scrollerMinSize.or(scrollerSize),
       scrollerMaxSize : options.scrollerMaxSize,
       scrollerSize : scrollerSize,
-      contentWidth : contentWidth,
-      contentHeight : contentHeight,
-      topRail : topRailSize,
-      leftRail : leftRailSize,
-      bottomRail : bottomRailSize,
-      rightRail : rightRailSize,
+      contentWidth : 0,
+      contentHeight : 0,
       onScroll : function(x, y, ox, oy) {
         if(oy != y)
           renderMiddle(y);
@@ -144,13 +132,10 @@ class Grid {
     bottomCenter = grid9.bottomCenter;
     bottomRight = grid9.bottomRight;
 
-    renderCorners();
-    renderMiddle(0);
-    renderCenter(0);
-    renderMain(0, 0);
+    setRowsAndColumns(rows, columns);
   }
 
-  public function setRowsAndColumns(rows : Int, columns : Int) {
+  public function setRowsAndColumns(rows: Int, columns: Int) {
     this.rows = rows;
     this.columns = columns;
     invalidateCache();
@@ -163,8 +148,8 @@ class Grid {
     leftRailSize = hOffset(fixedLeft);
     bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
-    grid9.resizeContent(contentWidth, contentHeight);
     grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
+    grid9.resizeContent(contentWidth, contentHeight);
     grid9.setPosition(grid9.position.x, grid9.position.y);
 
     renderCorners();

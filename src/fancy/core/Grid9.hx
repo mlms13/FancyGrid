@@ -157,14 +157,13 @@ class Grid9 {
     size = getGridSizeFromContainer();
     resizeGrid(size.w, size.h);
 
-    resizeContent(options.contentWidth, options.contentHeight);
     sizeRails(
       options.topRail.or(0),
       options.bottomRail.or(0),
       options.leftRail.or(0),
       options.rightRail.or(0)
     );
-    refresh();
+    resizeContent(options.contentWidth, options.contentHeight);
 
     // EVENTS
     // TODO make wiring optional
@@ -309,14 +308,13 @@ class Grid9 {
 
     top.style.width = bottom.style.width = '${gridWidth.min(contentWidth)}px';
     left.style.height = right.style.height = '${gridHeight.min(contentHeight)}px';
+    middles.each.fn(_.style.height = '${contentHeight - topRail - bottomRail}px');
+    centers.each.fn(_.style.width = '${contentWidth - leftRail - rightRail}px');
   }
 
   public function sizeRails(topRail: Float, bottomRail: Float, leftRail: Float, rightRail: Float) {
-    // FIXME: i commented out the early return because sometimes this function
-    // was the only way i could find to reset px width/height. i don't actually
-    // want to change the rails.
-    // if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail)
-    //   return;
+    if(this.topRail == topRail && this.bottomRail == bottomRail && this.leftRail == leftRail && this.rightRail == rightRail)
+      return;
     dirty = true;
     this.topRail = topRail;
     this.bottomRail = bottomRail;
@@ -324,12 +322,10 @@ class Grid9 {
     this.rightRail = rightRail;
     top.style.height = '${topRail}px';
     tops.each.fn(_.style.height = '${topRail}px');
-    middles.each.fn(_.style.height = '${contentHeight - topRail - bottomRail}px');
     bottom.style.height = '${bottomRail}px';
     bottoms.each.fn(_.style.height = '${bottomRail}px');
     left.style.width = '${leftRail}px';
     lefts.each.fn(_.style.width = '${leftRail}px');
-    centers.each.fn(_.style.width = '${contentWidth - leftRail - rightRail}px');
     right.style.width = '${rightRail}px';
     rights.each.fn(_.style.width = '${rightRail}px');
   }

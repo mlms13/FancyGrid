@@ -21,7 +21,8 @@ class SwipeMoveHelper {
       });
     });
     el.on("touchstart", function(e: js.html.TouchEvent) {
-      e.preventDefault();
+      // don't prevent default on touchstart/end because it stops mouse events
+      // like click from firing for this event
       if(null != id) return;
       var t = e.touches[0];
       id = t.identifier;
@@ -29,7 +30,6 @@ class SwipeMoveHelper {
       y = t.clientY;
     });
     el.on("touchend", function(e: js.html.TouchEvent) {
-      e.preventDefault();
       if(e.touches.length == 0) {
         this.id = null;
       } else {

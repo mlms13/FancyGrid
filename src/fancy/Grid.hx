@@ -12,6 +12,25 @@ using thx.Floats;
 using thx.Ints;
 using thx.Iterators;
 
+enum VerticalScrollPosition {
+  Top;
+  Bottom;
+  FromTop(distance: ScrollUnit);
+  FromBottom(distance: ScrollUnit);
+}
+
+enum HorizontalScrollPosition {
+  Left;
+  Right;
+  FromLeft(distance: ScrollUnit);
+  FromRight(distance: ScrollUnit);
+}
+
+enum ScrollUnit {
+  Pixels(value: Float);
+  Cells(value: Int);
+}
+
 enum CellDimension {
   Fixed(v: Float);
   RenderFirst;
@@ -157,6 +176,48 @@ class Grid {
     renderCenter(grid9.position.x);
     renderMain(grid9.position.x, grid9.position.y);
     grid9.refresh();
+  }
+
+  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) {
+    var xPos = x == null ? grid9.position.x : resolveHorizontalScroll(x),
+        yPos = y == null ? grid9.position.y : resolveVerticalScroll(y);
+
+    // `setPosition` in Grid9 already handles limits and early returns if
+    // nothing changed, so we can just go ahead and call it here
+    grid9.setPosition(xPos, yPos);
+    grid9.refresh();
+  }
+
+  function resolveHorizontalDistance(x: ScrollUnit): Float {
+    return switch x {
+      case Pixels(v): v;
+      case Cells(v): hOffset(v);
+    };
+  }
+
+  function resolveHorizontalScroll(x: HorizontalScrollPosition): Float {
+    return switch x {
+      case Left: 0;
+      case Right: grid9.contentWidth; // grid9.setPosition will limit this
+      case FromLeft(d): resolveHorizontalDistance(d);
+      case FromRight(d): grid9.contentWidth - resolveHorizontalDistance(d);
+    };
+  }
+
+  function resolveVerticalDistance(y: ScrollUnit): Float {
+    return switch y {
+      case Pixels(v): v;
+      case Cells(v): vOffset(v);
+    };
+  }
+
+  function resolveVerticalScroll(y: VerticalScrollPosition): Float {
+    return switch y {
+      case Top: 0;
+      case Bottom: grid9.contentHeight;
+      case FromTop(d): resolveVerticalDistance(d);
+      case FromBottom(d): grid9.contentHeight - resolveVerticalDistance(d);
+    };
   }
 
   function invalidateCache() {

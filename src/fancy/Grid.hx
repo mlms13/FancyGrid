@@ -12,12 +12,38 @@ using thx.Floats;
 using thx.Ints;
 using thx.Iterators;
 
+enum VerticalScrollPosition {
+  Top;
+  Bottom;
+  FromTop(distance: ScrollUnit);
+  FromBottom(distance: ScrollUnit);
+}
+
+enum HorizontalScrollPosition {
+  Left;
+  Right;
+  FromLeft(distance: ScrollUnit);
+  FromRight(distance: ScrollUnit);
+}
+
+enum ScrollUnit {
+  Pixels(value: Float);
+  Cells(value: Int);
+}
+
+enum CellDimension {
+  Fixed(v: Float);
+  RenderFirst;
+  RenderSmart; // renders more cells, may be slower
+  RenderAll; // renders all cells. definitely slower.
+}
+
 typedef GridOptions = {
   render: Int -> Int -> Element,
   ?vOffset: Int -> Float,
   ?hOffset: Int -> Float,
-  ?vSize: Int -> Float,
-  ?hSize: Int -> Float,
+  ?vSize: Int -> CellDimension,
+  ?hSize: Int -> CellDimension,
   columns: Int,
   rows: Int,
   ?fixedLeft: Int,
@@ -81,8 +107,8 @@ class Grid {
     render = options.render;
     vOffset = assignVOffset(options.vOffset);
     hOffset = assignHOffset(options.hOffset);
-    vSize = assignVSize(options.vSize);
-    hSize = assignHSize(options.hSize);
+    hSize = assignHSize(options.hSize != null ? options.hSize : function (_) return RenderSmart);
+    vSize = assignVSize(options.vSize != null ? options.vSize : function (_) return RenderSmart);
     rows = options.rows;
     columns = options.columns;
 
@@ -91,26 +117,14 @@ class Grid {
     fixedTop = options.fixedTop.or(0);
     fixedBottom = options.fixedBottom.or(0);
 
-    var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
-    var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
-
-    topRailSize = vOffset(fixedTop);
-    leftRailSize = hOffset(fixedLeft);
-    bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
-    rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
-
     var scrollerSize = options.scrollerSize.or(10);
 
     grid9 = new Grid9(view, {
       scrollerMinSize : options.scrollerMinSize.or(scrollerSize),
       scrollerMaxSize : options.scrollerMaxSize,
       scrollerSize : scrollerSize,
-      contentWidth : contentWidth,
-      contentHeight : contentHeight,
-      topRail : topRailSize,
-      leftRail : leftRailSize,
-      bottomRail : bottomRailSize,
-      rightRail : rightRailSize,
+      contentWidth : 0,
+      contentHeight : 0,
       onScroll : function(x, y, ox, oy) {
         if(oy != y)
           renderMiddle(y);
@@ -137,20 +151,73 @@ class Grid {
     bottomCenter = grid9.bottomCenter;
     bottomRight = grid9.bottomRight;
 
-    renderCorners();
-    renderMiddle(0);
-    renderCenter(0);
-    renderMain(0, 0);
+    setRowsAndColumns(rows, columns);
   }
 
-  public function setRowsAndColumns(rows : Int, columns : Int) {
+  public function setRowsAndColumns(rows: Int, columns: Int) {
     this.rows = rows;
     this.columns = columns;
     invalidateCache();
+
+    // recalculate sizes with the new content, and update grid9
+    var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
+    var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
+
+    topRailSize = vOffset(fixedTop);
+    leftRailSize = hOffset(fixedLeft);
+    bottomRailSize = fixedBottom == 0 ? 0 : (contentHeight - vOffset(rows - fixedBottom));
+    rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
+    grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
+    grid9.resizeContent(contentWidth, contentHeight);
+    grid9.setPosition(grid9.position.x, grid9.position.y);
+
     renderCorners();
     renderMiddle(grid9.position.y);
     renderCenter(grid9.position.x);
     renderMain(grid9.position.x, grid9.position.y);
+    grid9.refresh();
+  }
+
+  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) {
+    var xPos = x == null ? grid9.position.x : resolveHorizontalScroll(x),
+        yPos = y == null ? grid9.position.y : resolveVerticalScroll(y);
+
+    // `setPosition` in Grid9 already handles limits and early returns if
+    // nothing changed, so we can just go ahead and call it here
+    grid9.setPosition(xPos, yPos);
+    grid9.refresh();
+  }
+
+  function resolveHorizontalDistance(x: ScrollUnit): Float {
+    return switch x {
+      case Pixels(v): v;
+      case Cells(v): hOffset(v);
+    };
+  }
+
+  function resolveHorizontalScroll(x: HorizontalScrollPosition): Float {
+    return switch x {
+      case Left: 0;
+      case Right: grid9.contentWidth; // grid9.setPosition will limit this
+      case FromLeft(d): resolveHorizontalDistance(d);
+      case FromRight(d): grid9.contentWidth - resolveHorizontalDistance(d);
+    };
+  }
+
+  function resolveVerticalDistance(y: ScrollUnit): Float {
+    return switch y {
+      case Pixels(v): v;
+      case Cells(v): vOffset(v);
+    };
+  }
+
+  function resolveVerticalScroll(y: VerticalScrollPosition): Float {
+    return switch y {
+      case Top: 0;
+      case Bottom: grid9.contentHeight;
+      case FromTop(d): resolveVerticalDistance(d);
+      case FromBottom(d): grid9.contentHeight - resolveVerticalDistance(d);
+    };
   }
 
   function invalidateCache() {
@@ -158,66 +225,131 @@ class Grid {
       cache.invalidate();
   }
 
-  function assignVSize(f: Int -> Float): Int -> Float {
-    if(null != f) return f;
+  function assignVSize(f: Int -> CellDimension): Int -> Float {
     var cache = new IntCache();
     caches.push(cache);
+
     return function(row) {
       if(cache.exists(row))
         return cache.get(row);
-      var v = 0.0;
-      // test left shoulder and first content cell
-      var els: Array<Element> = [], el;
-      for(i in 0...(fixedLeft + 1).max(2)) {
-        el = renderAt(row, i);
-        els.push(el);
-        view.append(el);
-      }
-      // test last content cell and right shoulder
-      for(i in columns - fixedRight - 1...columns) {
-        el = renderAt(row, i);
-        els.push(el);
-        view.append(el);
-      }
-      // get measure
-      for(el in els)
-        v = v.max(el.getOuterHeight());
 
-      for(el in els)
-        view.removeChild(el);
-      cache.set(row, v);
-      return v;
+      var v = 0.0;
+      var vCalculated = switch f(row) {
+        case Fixed(val): val;
+        case RenderSmart:
+          // test left shoulder and first content cell
+          var els: Array<Element> = [], el;
+          var leftBound = (fixedLeft + 1).max(2).min(columns);
+          for(i in 0...leftBound) {
+            el = renderWithWidth(view, row, i);
+            els.push(el);
+          }
+          // test last content cell and right shoulder
+          var rightBound = (columns - fixedRight - 1).max(leftBound + 1);
+          for(i in rightBound...columns) {
+            el = renderWithWidth(view, row, i);
+            els.push(el);
+          }
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterHeight());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+        case RenderFirst:
+          // test left shoulder and first content cell
+          var el = renderWithWidth(view, row, 0);
+
+          // get measure
+          v = v.max(el.getOuterHeight());
+          view.removeChild(el);
+          v;
+        case RenderAll:
+          var els = [], el;
+          for (i in 0...columns) {
+            el = renderWithWidth(view, row, i);
+
+            els.push(el);
+          }
+
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterHeight());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+      }
+
+      cache.set(row, vCalculated);
+      return vCalculated;
     };
   }
 
-  function assignHSize(f: Int -> Float): Int -> Float {
-    if(null != f) return f;
+  function assignHSize(f: Int -> CellDimension): Int -> Float {
     var cache = new IntCache();
     caches.push(cache);
+
     return function(col) {
       if(cache.exists(col))
         return cache.get(col);
-      var v = 0.0;
-      // test headers and first content cell
-      var els: Array<Element> = [], el;
-      for(i in 0...(fixedTop + 1).max(2)) {
-        el = renderAt(i, col);
-        els.push(el);
-        view.append(el);
-      }
-      // test last content cell and footer
-      for(i in rows - fixedBottom - 1...rows) {
-        el = renderAt(i, col);
-        els.push(el);
-        view.append(el);
-      }
-      for(el in els)
-        v = v.max(el.getOuterWidth());
 
-      for(el in els)
-        view.removeChild(el);
-      cache.set(col, v);
-      return v;
+      var v = 0.0;
+      var vCalculated = switch f(col) {
+        case Fixed(val): val;
+        case RenderSmart:
+          // test left shoulder and first content cell
+          var els: Array<Element> = [], el;
+          var topBound = (fixedTop + 1).max(2).min(rows);
+          for(i in 0...topBound) {
+            el = renderAt(i, col);
+            els.push(el);
+            view.append(el);
+          }
+          // test last content cell and right shoulder
+          var bottomBound = (rows - fixedBottom - 1).max(topBound + 1);
+          for(i in bottomBound...rows) {
+            el = renderAt(i, col);
+            els.push(el);
+            view.append(el);
+          }
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterWidth());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+        case RenderFirst:
+          // test left shoulder and first content cell
+          var el = renderAt(0, col);
+          view.append(el);
+
+          // get measure
+          v = v.max(el.getOuterWidth());
+          view.removeChild(el);
+          v;
+        case RenderAll:
+          var els = [], el;
+          for (i in 0...rows) {
+            el = renderAt(i, col);
+
+            els.push(el);
+            view.append(el);
+          }
+
+          // get measure
+          for(el in els)
+            v = v.max(el.getOuterWidth());
+
+          for(el in els)
+            view.removeChild(el);
+          v;
+      }
+
+      cache.set(col, vCalculated);
+      return vCalculated;
     };
   }
 
@@ -272,8 +404,15 @@ class Grid {
     return el;
   }
 
+  function renderWithWidth(parent: Element, row: Int, col: Int) {
+    var el = renderAt(row, col);
+    parent.append(el);
+    el.style.width = '${hSize(col)}px';
+    return el;
+  }
+
   function renderMiddle(v: Float) {
-    var r = Search.binary(0, rows, rowComparator(v + topRailSize)).max(fixedTop);
+    var r = Search.binary(0, rows - 1, rowComparator(v + topRailSize)).max(fixedTop);
     var top = vOffset(r);
     var limit = top + vSize(r) + grid9.gridMiddleHeight;
 
@@ -302,7 +441,7 @@ class Grid {
   }
 
   function renderCenter(v: Float) {
-    var c = Search.binary(0, columns, columnComparator(v + leftRailSize)).max(fixedLeft);
+    var c = Search.binary(0, columns - 1, columnComparator(v + leftRailSize)).max(fixedLeft);
     var left = hOffset(c);
     var limit = left + hSize(c) + grid9.gridCenterWidth;
 
@@ -330,8 +469,8 @@ class Grid {
   }
 
   function renderMain(x: Float, y: Float) {
-    var r = Search.binary(0, rows, rowComparator(y + topRailSize)).max(fixedTop);
-    var c = Search.binary(0, columns, columnComparator(x + leftRailSize)).max(fixedLeft);
+    var r = Search.binary(0, rows - 1, rowComparator(y + topRailSize)).max(fixedTop);
+    var c = Search.binary(0, columns - 1, columnComparator(x + leftRailSize)).max(fixedLeft);
 
     var left = hOffset(c);
     var top = vOffset(r);

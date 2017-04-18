@@ -13,10 +13,10 @@ class Search {
       var c = comparator(m);
       if(c < 0) {
         l = m + 1;
-        return search(mid(l, r), l, r);
+        return l == r ? l : search(mid(l, r), l, r);
       } else if(c > 0) {
         r = m - 1;
-        return search(mid(l, r), l, r);
+        return r == l ? r : search(mid(l, r), l, r);
       } else {
         return m;
       }

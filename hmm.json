@@ -1,0 +1,25 @@
+{
+  "dependencies": [
+    {
+      "name": "dots",
+      "type": "git",
+      "dir": null,
+      "ref": "9b7c752",
+      "url": "git@github.com:fponticelli/dots"
+    },
+    {
+      "name": "thx.core",
+      "type": "git",
+      "dir": null,
+      "ref": "9acdbd1",
+      "url": "git@github.com:fponticelli/thx.core"
+    },
+    {
+      "name": "utest",
+      "type": "git",
+      "dir": null,
+      "ref": "0b96b9d",
+      "url": "git@github.com:fponticelli/utest"
+    }
+  ]
+}

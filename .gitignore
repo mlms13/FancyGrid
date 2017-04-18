@@ -1,6 +1,13 @@
-docs/xml
+# Node
 node_modules/
-*.zip
 
-# ignore dist for now
+# Haxe
+.haxelib/
+
+# IDEs
+.vscode/
+
+# Project files
+docs/xml
 dist/
+*.zip

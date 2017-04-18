@@ -5,12 +5,10 @@ import fancy.core.*;
 using dots.Dom;
 import fancy.core.IntCache;
 import fancy.core.PositionCache;
-using fancy.core.Lazy;
 using fancy.core.Search;
 using thx.Nulls;
 using thx.Floats;
 using thx.Ints;
-using thx.Iterators;
 
 typedef GridOptions = {
   render: Int -> Int -> Element,
@@ -27,6 +25,8 @@ typedef GridOptions = {
   ?scrollerMinSize: Float,
   ?scrollerMaxSize: Float,
   ?scrollerSize: Float,
+  ?onScroll: Float -> Float -> Float -> Float -> Void,
+  ?onResize: Float -> Float -> Float -> Float -> Void
 };
 
 typedef InvalidatableCache = {
@@ -101,6 +101,9 @@ class Grid {
 
     var scrollerSize = options.scrollerSize.or(10);
 
+    var onScroll = options.onScroll.or(function(_, _, _, _) {});
+    var onResize = options.onResize.or(function(_, _, _, _) {});
+
     grid9 = new Grid9(view, {
       scrollerMinSize : options.scrollerMinSize.or(scrollerSize),
       scrollerMaxSize : options.scrollerMaxSize,
@@ -117,6 +120,7 @@ class Grid {
         if(ox != x)
           renderCenter(x);
         renderMain(x, y);
+        onScroll(x, y, ox, oy);
       },
       onResize : function(w, h, ow, oh) {
         if(oh != h)
@@ -124,6 +128,7 @@ class Grid {
         if(ow != w)
           renderCenter(grid9.position.x);
         renderMain(grid9.position.x, grid9.position.y);
+        onResize(w, h, ow, oh);
       }
     });
 

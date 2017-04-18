@@ -1533,12 +1533,20 @@ fancy_core_Search.binary = function(min,max,comparator) {
 		var c = comparator(m);
 		if(c < 0) {
 			l1 = m + 1;
-			var search1 = mid(l1,r1);
-			return search(search1,l1,r1);
+			if(l1 == r1) {
+				return l1;
+			} else {
+				var search1 = mid(l1,r1);
+				return search(search1,l1,r1);
+			}
 		} else if(c > 0) {
 			r1 = m - 1;
-			var search2 = mid(l1,r1);
-			return search(search2,l1,r1);
+			if(r1 == l1) {
+				return r1;
+			} else {
+				var search2 = mid(l1,r1);
+				return search(search2,l1,r1);
+			}
 		} else {
 			return m;
 		}
@@ -1652,17 +1660,20 @@ fancy_core_TestSearch.prototype = {
 			return thx_Ints.compare(v,expected);
 		};
 	}
+	,comp2: function(a) {
+		return -1;
+	}
 	,testBinarySearch: function() {
 		var max = 10;
 		var values = thx_Ints.range(0,max + 1);
-		haxe_Log.trace(values,{ fileName : "TestSearch.hx", lineNumber : 15, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
 		var _g = 0;
 		while(_g < values.length) {
 			var v = values[_g];
 			++_g;
-			utest_Assert.equals(v,fancy_core_Search.binary(0,max,this.comp(v)),null,{ fileName : "TestSearch.hx", lineNumber : 17, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
+			utest_Assert.equals(v,fancy_core_Search.binary(0,max,this.comp(v)),null,{ fileName : "TestSearch.hx", lineNumber : 19, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
 		}
-		utest_Assert.equals(3,fancy_core_Search.binary(max,0,this.comp(3)),null,{ fileName : "TestSearch.hx", lineNumber : 19, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
+		utest_Assert.equals(3,fancy_core_Search.binary(max,0,this.comp(3)),null,{ fileName : "TestSearch.hx", lineNumber : 21, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
+		utest_Assert.equals(3,fancy_core_Search.binary(0,3,$bind(this,this.comp2)),null,{ fileName : "TestSearch.hx", lineNumber : 23, className : "fancy.core.TestSearch", methodName : "testBinarySearch"});
 	}
 	,__class__: fancy_core_TestSearch
 };

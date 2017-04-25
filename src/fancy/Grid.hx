@@ -15,6 +15,7 @@ enum VerticalScrollPosition {
   Bottom;
   FromTop(distance: ScrollUnit);
   FromBottom(distance: ScrollUnit);
+  Visible(distance: ScrollUnit);
 }
 
 enum HorizontalScrollPosition {
@@ -22,6 +23,7 @@ enum HorizontalScrollPosition {
   Right;
   FromLeft(distance: ScrollUnit);
   FromRight(distance: ScrollUnit);
+  Visible(distance: ScrollUnit);
 }
 
 enum ScrollUnit {
@@ -143,6 +145,12 @@ class Grid {
           renderCenter(grid9.position.x);
         renderMain(grid9.position.x, grid9.position.y);
         onResize(w, h, ow, oh);
+      },
+      onRefresh : function() {
+        renderCorners();
+        renderMiddle(grid9.position.y);
+        renderCenter(grid9.position.x);
+        renderMain(grid9.position.x, grid9.position.y);
       }
     });
 
@@ -157,6 +165,17 @@ class Grid {
     bottomRight = grid9.bottomRight;
 
     setRowsAndColumns(rows, columns);
+  }
+
+  public function patchCellContent(row: Int, col: Int, el: Element) {
+    // TODO !!!
+    var s = '.row-$row.col-$col';
+    trace("PATCH IT NOW: " + s);
+    var p = grid9.el.querySelector(s);
+    trace(p);
+    if(null == p) return;
+    p.innerHTML = "";
+    p.appendChild(el);
   }
 
   public function setRowsAndColumns(rows: Int, columns: Int) {
@@ -174,7 +193,7 @@ class Grid {
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
     grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
     grid9.resizeContent(contentWidth, contentHeight);
-    grid9.setPosition(grid9.position.x, grid9.position.y);
+    grid9.setPosition(grid9.position.x, grid9.position.y, false);
 
     renderCorners();
     renderMiddle(grid9.position.y);
@@ -189,9 +208,22 @@ class Grid {
 
     // `setPosition` in Grid9 already handles limits and early returns if
     // nothing changed, so we can just go ahead and call it here
-    grid9.setPosition(xPos, yPos);
+    grid9.setPosition(xPos, yPos, true);
     grid9.refresh();
   }
+
+  // public function refresh() {
+  //   trace("grid.refresh");
+  //   var x = 0,
+  //       y = 0;
+
+  //   scrollTo(100, 100);
+
+  //   // renderMiddle(y);
+  //   // renderCenter(x);
+  //   // renderMain(x, y);
+  //   // grid9.refresh();
+  // }
 
   function resolveHorizontalDistance(x: ScrollUnit): Float {
     return switch x {
@@ -206,6 +238,17 @@ class Grid {
       case Right: grid9.contentWidth; // grid9.setPosition will limit this
       case FromLeft(d): resolveHorizontalDistance(d);
       case FromRight(d): grid9.contentWidth - resolveHorizontalDistance(d);
+      case Visible(d):
+        var off = resolveHorizontalDistance(d);
+        var pos = grid9.position;
+        var size = grid9.size;
+        if(off >= pos.x && off <= pos.x + size.w) {
+          pos.x;
+        } else if(off < pos.x) {
+          off;
+        } else {
+          off; // TODO !!!
+        }
     };
   }
 
@@ -222,6 +265,17 @@ class Grid {
       case Bottom: grid9.contentHeight;
       case FromTop(d): resolveVerticalDistance(d);
       case FromBottom(d): grid9.contentHeight - resolveVerticalDistance(d);
+      case Visible(d):
+        var off = resolveVerticalDistance(d);
+        var pos = grid9.position;
+        var size = grid9.size;
+        if(off >= pos.y && off <= pos.y + size.h) {
+          pos.y;
+        } else if(off < pos.y) {
+          off;
+        } else {
+          off; // TODO !!!
+        }
     };
   }
 
@@ -392,6 +446,8 @@ class Grid {
     var el = cacheElement.get(row, col);
     if(null == el) {
       el = js.Browser.document.createElement("div");
+      el.setAttribute("data-row", '$row');
+      el.setAttribute("data-col", '$col');
       el.className = 'cell row-$row col-$col';
       el.appendChild(render(row, col));
       cacheElement.set(row, col, el);
@@ -565,6 +621,15 @@ class Grid {
       }
       for(c in right...columns) {
         renderTo(bottomRightAnchor, r, c);
+      }
+    }
+  }
+
+  public function resetCacheForRange(minRow:Int, minCol: Int, maxRow: Int, maxCol: Int) {
+    // cacheElement.invalidate(); // TODO !!!
+    for(r in minRow...maxRow+1) {
+      for(c in minCol...maxCol+1) {
+        cacheElement.remove(r, c);
       }
     }
   }

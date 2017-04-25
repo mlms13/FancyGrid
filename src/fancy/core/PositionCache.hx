@@ -31,6 +31,12 @@ class PositionCache<T> {
     }
   }
 
+  public function remove(row: Int, col: Int) {
+    var r = cache[row];
+    if(null == r) return;
+    r[col] = null;
+  }
+
   public function invalidate()
     cache = [];
 }

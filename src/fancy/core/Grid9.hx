@@ -14,6 +14,7 @@ typedef Grid9Options = {
   scrollerSize: Float,
   ?onScroll: Float -> Float -> Float -> Float -> Void,
   ?onResize: Float -> Float -> Float -> Float -> Void,
+  ?onRefresh: Void -> Void,
   ?scrollerMargin: Float,
   ?scrollerMinSize: Float,
   ?scrollerMaxSize: Float,
@@ -77,6 +78,7 @@ class Grid9 {
 
   var onScroll: Float -> Float -> Float -> Float -> Void;
   var onResize: Float -> Float -> Float -> Float -> Void;
+  var onRefresh: Void -> Void;
 
   public var gridMiddleHeight(get, null): Float;
   public var gridCenterWidth(get, null): Float;
@@ -85,6 +87,7 @@ class Grid9 {
     position = { x: 0.0, y: 0.0 };
     onScroll = options.onScroll.or(function(x, y, ox, oy) {});
     onResize = options.onResize.or(function(w, h, ow, oh) {});
+    onRefresh = options.onRefresh.or(function() {});
     var offset = Lazy.of(willDisplayBothScrollbar() ? scrollerSize + scrollerMargin : 0),
         viewHeight = get_gridMiddleHeight,
         contentHeight = Lazy.of(contentHeight - topRail - bottomRail),
@@ -231,14 +234,14 @@ class Grid9 {
   }
 
   function resetPosition() {
-    setPosition(position.x, position.y);
+    setPosition(position.x, position.y, false);
   }
 
   public function movePosition(x: Float, y: Float) {
-    setPosition(position.x + x, position.y + y);
+    setPosition(position.x + x, position.y + y, true);
   }
 
-  public function setPosition(x: Float, y: Float) {
+  public function setPosition(x: Float, y: Float, force: Bool) {
     var oldx = position.x,
         oldy = position.y;
     position.x = x;
@@ -257,9 +260,15 @@ class Grid9 {
       position.y = limit;
     }
 
-    if(oldx == position.x && oldy == position.y) return;
-    onScroll(position.x, position.y, oldx, oldy);
-    dirty = true;
+    if(oldx == position.x && oldy == position.y) {
+      if(force) {
+        dirty = true;
+        onRefresh();
+      }
+    } else {
+      dirty = true;
+      onScroll(position.x, position.y, oldx, oldy);
+    }
   }
 
   function getGridSizeFromContainer() : { w: Float, h: Float } {

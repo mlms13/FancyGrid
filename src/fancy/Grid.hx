@@ -170,9 +170,7 @@ class Grid {
   public function patchCellContent(row: Int, col: Int, el: Element) {
     // TODO !!!
     var s = '.row-$row.col-$col';
-    trace("PATCH IT NOW: " + s);
     var p = grid9.el.querySelector(s);
-    trace(p);
     if(null == p) return;
     p.innerHTML = "";
     p.appendChild(el);

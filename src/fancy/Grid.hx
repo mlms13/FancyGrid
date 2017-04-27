@@ -131,18 +131,16 @@ class Grid {
       contentWidth : 0,
       contentHeight : 0,
       onScroll : function(x, y, ox, oy) {
-        if(oy != y)
-          renderMiddle(y);
-        if(ox != x)
-          renderCenter(x);
+        renderCorners();
+        renderMiddle(y);
+        renderCenter(x);
         renderMain(x, y);
         onScroll(x, y, ox, oy);
       },
       onResize : function(w, h, ow, oh) {
-        if(oh != h)
-          renderMiddle(grid9.position.y);
-        if(ow != w)
-          renderCenter(grid9.position.x);
+        renderCorners();
+        renderMiddle(grid9.position.y);
+        renderCenter(grid9.position.x);
         renderMain(grid9.position.x, grid9.position.y);
         onResize(w, h, ow, oh);
       },
@@ -223,6 +221,34 @@ class Grid {
   //   // grid9.refresh();
   // }
 
+  function lookupColumn(x: ScrollUnit): Int {
+    return switch x {
+      case Pixels(px):
+        var cur = 0.0;
+        for(i in 0...columns) { // inefficient but also not really used
+          cur += hSize(i);
+          if(px < cur)
+            return i;
+        }
+        return columns - 1;
+      case Cells(v): v;
+    };
+  }
+
+  function lookupRow(x: ScrollUnit): Int {
+    return switch x {
+      case Pixels(px):
+        var cur = 0.0;
+        for(i in 0...rows) { // inefficient but also not really used
+          cur += vSize(i);
+          if(px < cur)
+            return i;
+        }
+        return rows - 1;
+      case Cells(v): v;
+    };
+  }
+
   function resolveHorizontalDistance(x: ScrollUnit): Float {
     return switch x {
       case Pixels(v): v;
@@ -237,15 +263,21 @@ class Grid {
       case FromLeft(d): resolveHorizontalDistance(d);
       case FromRight(d): grid9.contentWidth - resolveHorizontalDistance(d);
       case Visible(d):
-        var off = resolveHorizontalDistance(d);
-        var pos = grid9.position;
-        var size = grid9.size;
-        if(off >= pos.x && off <= pos.x + size.w) {
-          pos.x;
-        } else if(off < pos.x) {
-          off;
+        var off = resolveHorizontalDistance(d),
+            col = lookupColumn(d),
+            width = hSize(col);
+        if(col < fixedLeft || col >= columns - fixedRight) {
+          // selecting a cell on a rail
+          grid9.position.x;
+        } else if(off < grid9.leftRail + grid9.position.x) {
+          // crossing or hiding under left
+          off - grid9.leftRail;
+        } else if(off + width > grid9.leftRail + grid9.position.x + grid9.gridCenterWidth) {
+          // crossing or hiding under right
+          off - grid9.gridCenterWidth;
         } else {
-          off; // TODO !!!
+          // in visible area
+          grid9.position.x;
         }
     };
   }
@@ -264,15 +296,21 @@ class Grid {
       case FromTop(d): resolveVerticalDistance(d);
       case FromBottom(d): grid9.contentHeight - resolveVerticalDistance(d);
       case Visible(d):
-        var off = resolveVerticalDistance(d);
-        var pos = grid9.position;
-        var size = grid9.size;
-        if(off >= pos.y && off <= pos.y + size.h) {
-          pos.y;
-        } else if(off < pos.y) {
-          off;
+        var off = resolveVerticalDistance(d),
+            row = lookupRow(d),
+            height = vSize(row);
+        if(row < fixedTop || row >= rows - fixedBottom) {
+          // selecting a cell on a rail
+          grid9.position.y;
+        } else if(off < grid9.topRail + grid9.position.y) {
+          // crossing or hiding under top
+          off - grid9.topRail;
+        } else if(off + height > grid9.topRail + grid9.position.y + grid9.gridMiddleHeight) {
+          // crossing or hiding under bottom
+          off - grid9.gridMiddleHeight;
         } else {
-          off; // TODO !!!
+          // in visible area
+          grid9.position.y;
         }
     };
   }

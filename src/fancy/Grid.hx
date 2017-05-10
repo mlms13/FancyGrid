@@ -78,8 +78,8 @@ class Grid {
   var fixedRight: Int;
   var fixedTop: Int;
   var fixedBottom: Int;
-  var columns: Int;
-  var rows: Int;
+  public var columns(default, null): Int;
+  public var rows(default, null): Int;
 
   var grid9: Grid9;
 

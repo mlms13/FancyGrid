@@ -198,6 +198,13 @@ class Grid {
     grid9.refresh();
   }
 
+  public function getScrollPosition() : { x: Float, y: Float } {
+    return {
+      x: grid9.position.x,
+      y: grid9.position.y
+    };
+  }
+
   public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) {
     var xPos = x == null ? grid9.position.x : resolveHorizontalScroll(x),
         yPos = y == null ? grid9.position.y : resolveVerticalScroll(y);

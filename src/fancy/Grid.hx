@@ -166,7 +166,6 @@ class Grid {
   }
 
   public function patchCellContent(row: Int, col: Int, el: Element) {
-    // TODO !!!
     var s = '.row-$row.col-$col';
     var p = grid9.el.querySelector(s);
     if(null == p) return;
@@ -221,19 +220,6 @@ class Grid {
     grid9.refresh();
   }
 
-  // public function refresh() {
-  //   trace("grid.refresh");
-  //   var x = 0,
-  //       y = 0;
-
-  //   scrollTo(100, 100);
-
-  //   // renderMiddle(y);
-  //   // renderCenter(x);
-  //   // renderMain(x, y);
-  //   // grid9.refresh();
-  // }
-
   function lookupColumn(x: ScrollUnit): Int {
     return switch x {
       case Pixels(px):
@@ -260,6 +246,19 @@ class Grid {
         return rows - 1;
       case Cells(v): v;
     };
+  }
+
+  public function rowsInView(): Int {
+    var h = grid9.gridMiddleHeight,
+        y = grid9.position.y,
+        r = lookupRow(Pixels(y)),
+        i = 0;
+    while(i + r < rows) {
+      if(vOffset(i + r) >= y + h)
+        return i;
+      i++;
+    }
+    return i;
   }
 
   function resolveHorizontalDistance(x: ScrollUnit): Float {
@@ -675,7 +674,6 @@ class Grid {
   }
 
   public function resetCacheForRange(minRow:Int, minCol: Int, maxRow: Int, maxCol: Int) {
-    // cacheElement.invalidate(); // TODO !!!
     for(r in minRow...maxRow+1) {
       for(c in minCol...maxCol+1) {
         cacheElement.remove(r, c);

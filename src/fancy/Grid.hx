@@ -15,6 +15,7 @@ enum VerticalScrollPosition {
   Bottom;
   FromTop(distance: ScrollUnit);
   FromBottom(distance: ScrollUnit);
+  Visible(distance: ScrollUnit);
 }
 
 enum HorizontalScrollPosition {
@@ -22,6 +23,7 @@ enum HorizontalScrollPosition {
   Right;
   FromLeft(distance: ScrollUnit);
   FromRight(distance: ScrollUnit);
+  Visible(distance: ScrollUnit);
 }
 
 enum ScrollUnit {
@@ -76,8 +78,8 @@ class Grid {
   var fixedRight: Int;
   var fixedTop: Int;
   var fixedBottom: Int;
-  var columns: Int;
-  var rows: Int;
+  public var columns(default, null): Int;
+  public var rows(default, null): Int;
 
   var grid9: Grid9;
 
@@ -129,20 +131,24 @@ class Grid {
       contentWidth : 0,
       contentHeight : 0,
       onScroll : function(x, y, ox, oy) {
-        if(oy != y)
-          renderMiddle(y);
-        if(ox != x)
-          renderCenter(x);
+        renderCorners();
+        renderMiddle(y);
+        renderCenter(x);
         renderMain(x, y);
         onScroll(x, y, ox, oy);
       },
       onResize : function(w, h, ow, oh) {
-        if(oh != h)
-          renderMiddle(grid9.position.y);
-        if(ow != w)
-          renderCenter(grid9.position.x);
+        renderCorners();
+        renderMiddle(grid9.position.y);
+        renderCenter(grid9.position.x);
         renderMain(grid9.position.x, grid9.position.y);
         onResize(w, h, ow, oh);
+      },
+      onRefresh : function() {
+        renderCorners();
+        renderMiddle(grid9.position.y);
+        renderCenter(grid9.position.x);
+        renderMain(grid9.position.x, grid9.position.y);
       }
     });
 
@@ -157,6 +163,15 @@ class Grid {
     bottomRight = grid9.bottomRight;
 
     setRowsAndColumns(rows, columns);
+  }
+
+  public function patchCellContent(row: Int, col: Int, el: Element) {
+    // TODO !!!
+    var s = '.row-$row.col-$col';
+    var p = grid9.el.querySelector(s);
+    if(null == p) return;
+    p.innerHTML = "";
+    p.appendChild(el);
   }
 
   public function setRowsAndColumns(rows: Int, columns: Int) {
@@ -174,7 +189,7 @@ class Grid {
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
     grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
     grid9.resizeContent(contentWidth, contentHeight);
-    grid9.setPosition(grid9.position.x, grid9.position.y);
+    grid9.setPosition(grid9.position.x, grid9.position.y, false);
 
     renderCorners();
     renderMiddle(grid9.position.y);
@@ -183,14 +198,68 @@ class Grid {
     grid9.refresh();
   }
 
-  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) {
+  public function getScrollPosition() : { x: Float, y: Float } {
+    return {
+      x: grid9.position.x,
+      y: grid9.position.y
+    };
+  }
+
+  public function scrollToPosition(?x : Float, ?y : Float) : Void {
+    var scrollX = x != null ? FromLeft(Pixels(x)) : null;
+    var scrollY = y != null ? FromTop(Pixels(y)) : null;
+    scrollTo(scrollX, scrollY);
+  }
+
+  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) : Void {
     var xPos = x == null ? grid9.position.x : resolveHorizontalScroll(x),
         yPos = y == null ? grid9.position.y : resolveVerticalScroll(y);
 
     // `setPosition` in Grid9 already handles limits and early returns if
     // nothing changed, so we can just go ahead and call it here
-    grid9.setPosition(xPos, yPos);
+    grid9.setPosition(xPos, yPos, true);
     grid9.refresh();
+  }
+
+  // public function refresh() {
+  //   trace("grid.refresh");
+  //   var x = 0,
+  //       y = 0;
+
+  //   scrollTo(100, 100);
+
+  //   // renderMiddle(y);
+  //   // renderCenter(x);
+  //   // renderMain(x, y);
+  //   // grid9.refresh();
+  // }
+
+  function lookupColumn(x: ScrollUnit): Int {
+    return switch x {
+      case Pixels(px):
+        var cur = 0.0;
+        for(i in 0...columns) { // inefficient but also not really used
+          cur += hSize(i);
+          if(px < cur)
+            return i;
+        }
+        return columns - 1;
+      case Cells(v): v;
+    };
+  }
+
+  function lookupRow(x: ScrollUnit): Int {
+    return switch x {
+      case Pixels(px):
+        var cur = 0.0;
+        for(i in 0...rows) { // inefficient but also not really used
+          cur += vSize(i);
+          if(px < cur)
+            return i;
+        }
+        return rows - 1;
+      case Cells(v): v;
+    };
   }
 
   function resolveHorizontalDistance(x: ScrollUnit): Float {
@@ -206,6 +275,23 @@ class Grid {
       case Right: grid9.contentWidth; // grid9.setPosition will limit this
       case FromLeft(d): resolveHorizontalDistance(d);
       case FromRight(d): grid9.contentWidth - resolveHorizontalDistance(d);
+      case Visible(d):
+        var off = resolveHorizontalDistance(d),
+            col = lookupColumn(d),
+            width = hSize(col);
+        if(col < fixedLeft || col >= columns - fixedRight) {
+          // selecting a cell on a rail
+          grid9.position.x;
+        } else if(off < grid9.leftRail + grid9.position.x) {
+          // crossing or hiding under left
+          off - grid9.leftRail;
+        } else if(off + width > grid9.leftRail + grid9.position.x + grid9.gridCenterWidth) {
+          // crossing or hiding under right
+          off - grid9.gridCenterWidth;
+        } else {
+          // in visible area
+          grid9.position.x;
+        }
     };
   }
 
@@ -222,6 +308,23 @@ class Grid {
       case Bottom: grid9.contentHeight;
       case FromTop(d): resolveVerticalDistance(d);
       case FromBottom(d): grid9.contentHeight - resolveVerticalDistance(d);
+      case Visible(d):
+        var off = resolveVerticalDistance(d),
+            row = lookupRow(d),
+            height = vSize(row);
+        if(row < fixedTop || row >= rows - fixedBottom) {
+          // selecting a cell on a rail
+          grid9.position.y;
+        } else if(off < grid9.topRail + grid9.position.y) {
+          // crossing or hiding under top
+          off - grid9.topRail;
+        } else if(off + height > grid9.topRail + grid9.position.y + grid9.gridMiddleHeight) {
+          // crossing or hiding under bottom
+          off - grid9.gridMiddleHeight;
+        } else {
+          // in visible area
+          grid9.position.y;
+        }
     };
   }
 
@@ -392,6 +495,8 @@ class Grid {
     var el = cacheElement.get(row, col);
     if(null == el) {
       el = js.Browser.document.createElement("div");
+      el.setAttribute("data-row", '$row');
+      el.setAttribute("data-col", '$col');
       el.className = 'cell row-$row col-$col';
       el.appendChild(render(row, col));
       cacheElement.set(row, col, el);
@@ -565,6 +670,15 @@ class Grid {
       }
       for(c in right...columns) {
         renderTo(bottomRightAnchor, r, c);
+      }
+    }
+  }
+
+  public function resetCacheForRange(minRow:Int, minCol: Int, maxRow: Int, maxCol: Int) {
+    // cacheElement.invalidate(); // TODO !!!
+    for(r in minRow...maxRow+1) {
+      for(c in minCol...maxCol+1) {
+        cacheElement.remove(r, c);
       }
     }
   }

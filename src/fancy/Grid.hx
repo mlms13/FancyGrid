@@ -205,7 +205,13 @@ class Grid {
     };
   }
 
-  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) {
+  public function scrollToPosition(?x : Float, ?y : Float) : Void {
+    var scrollX = x != null ? FromLeft(Pixels(x)) : null;
+    var scrollY = y != null ? FromTop(Pixels(y)) : null;
+    scrollTo(scrollX, scrollY);
+  }
+
+  public function scrollTo(?x: HorizontalScrollPosition, ?y: VerticalScrollPosition) : Void {
     var xPos = x == null ? grid9.position.x : resolveHorizontalScroll(x),
         yPos = y == null ? grid9.position.y : resolveVerticalScroll(y);
 

@@ -13,6 +13,7 @@ class DragMoveHelper {
     el.on("mousedown", function(e: js.html.MouseEvent) {
       if(moving) return;
       e.preventDefault();
+      e.stopPropagation();
       moving = true;
       x = e.clientX;
       y = e.clientY;

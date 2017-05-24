@@ -286,7 +286,7 @@ class Grid {
           off - grid9.leftRail;
         } else if(off + width > grid9.leftRail + grid9.position.x + grid9.gridCenterWidth) {
           // crossing or hiding under right
-          off - grid9.gridCenterWidth;
+          (off + width) - grid9.gridCenterWidth - grid9.leftRail;
         } else {
           // in visible area
           grid9.position.x;
@@ -319,7 +319,7 @@ class Grid {
           off - grid9.topRail;
         } else if(off + height > grid9.topRail + grid9.position.y + grid9.gridMiddleHeight) {
           // crossing or hiding under bottom
-          off - grid9.gridMiddleHeight;
+          (off + height) - grid9.gridMiddleHeight - grid9.topRail;
         } else {
           // in visible area
           grid9.position.y;

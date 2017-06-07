@@ -308,6 +308,11 @@ class Grid9 {
     left.style.height = right.style.height = '${gridHeight.min(contentHeight)}px';
   }
 
+  public function refreshSize() {
+    size = getGridSizeFromContainer();
+    resizeGrid(size.w, size.h);
+  }
+
   public function resizeContent(width: Float, height: Float) {
     if(contentWidth == width && contentHeight == height)
       return;

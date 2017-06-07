@@ -174,10 +174,11 @@ class Grid {
   }
 
   public function setRowsAndColumns(rows: Int, columns: Int) {
+    var differentNumber = this.rows != rows || this.columns != columns;
     this.rows = rows;
     this.columns = columns;
     invalidateCache();
-
+    grid9.refreshSize();
     // recalculate sizes with the new content, and update grid9
     var contentWidth = hOffset(columns - 1) + hSize(columns - 1);
     var contentHeight = vOffset(rows - 1) + vSize(rows - 1);
@@ -188,7 +189,7 @@ class Grid {
     rightRailSize = fixedRight == 0 ? 0 : (contentWidth - hOffset(columns - fixedRight));
     grid9.sizeRails(topRailSize, bottomRailSize, leftRailSize, rightRailSize);
     grid9.resizeContent(contentWidth, contentHeight);
-    grid9.setPosition(grid9.position.x, grid9.position.y, false);
+    grid9.setPosition(grid9.position.x, grid9.position.y, differentNumber);
 
     renderCorners();
     renderMiddle(grid9.position.y);
